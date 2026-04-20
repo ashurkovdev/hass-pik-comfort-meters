@@ -1,0 +1,11 @@
+submit_reading:
+  name: Отправить показания счётчика
+  description: Отправляет показания для всех тарифов счётчика (устройства). Выберите устройство PIK Comfort Meters.
+  fields:
+    device_id:
+      name: Устройство
+      description: Устройство счётчика (например, "PIK Горячая вода 250314753")
+      required: true
+      selector:
+        device:
+          integration: pik_comfort_meters

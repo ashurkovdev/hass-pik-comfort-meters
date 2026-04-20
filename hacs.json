@@ -1,0 +1,8 @@
+{
+    "name": "ПИК Комфорт - подача показаний (PIK Comfort meters)",
+    "content_in_root": false,
+    "zip_release": false,
+    "render_readme": true,
+    "country": "ru",
+    "homeassistant": "2021.11.0"
+}

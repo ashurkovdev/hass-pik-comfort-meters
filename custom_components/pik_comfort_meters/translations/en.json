@@ -1,0 +1,92 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "PIK Comfort Meters",
+        "description": "Enter credentials for PIK Comfort portal",
+        "data": {
+          "phone": "Phone number",
+          "password": "Password",
+          "update_interval": "Update interval (seconds)"
+        }
+      }
+    },
+    "error": {
+      "auth_failed": "Authentication failed. Check phone and password.",
+      "no_accounts": "No accounts found for this user.",
+      "unknown": "Unknown error. Check logs for details."
+    },
+    "abort": {
+      "already_configured": "Account is already configured"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "PIK Comfort Meters Options",
+        "data": {
+          "update_interval": "Update interval (seconds)"
+        }
+      }
+    }
+  }
+  ,
+  "services": {
+    "pik_comfort_meters": {
+      "strings": {
+        "value_accounted_label": "Accounted",
+        "value_submitted_label": "Submitted",
+        "average_in_month_label": "Average in month",
+        "auth_failed_update": "Failed to authenticate",
+        "fetch_meters_failed": "Failed to get account meters",
+        "update_failed": "Update error: {err}",
+        "tariff_day": "(Day)",
+        "tariff_night": "(Night)",
+        "tariff_morning_evening": "(Morning & Evening)",
+        "tariff_generic": "Tariff {num}",
+        "update_error": "PIK Comfort Update Error",
+        "submit_error": "PIK Comfort Submit Error"
+      },
+      "name": "PIK Comfort Meters",
+      "description": "Services for the PIK Comfort Meters integration",
+      "submit_reading": {
+        "name": "Submit Reading",
+        "description": "Submit meter readings for a device",
+        "fields": {
+          "device_id": {
+            "name": "Device ID",
+            "description": "The device registry ID to submit readings for"
+          },
+          "error_missing_device_id": {
+            "name": "Missing device id",
+            "description": "Missing parameter: device_id"
+          },
+          "error_device_not_found": {
+            "name": "Device not found",
+            "description": "Device {device_id} not found"
+          },
+          "error_no_sensors_found": {
+            "name": "No sensors found",
+            "description": "No sensors found for device {device_id}"
+          },
+          "error_no_valid_readings": {
+            "name": "No valid readings",
+            "description": "No valid readings for device {device_id}"
+          },
+          "error_device_metadata_not_found": {
+            "name": "Device metadata not found",
+            "description": "Device metadata not found for {device_unique_id}"
+          },
+          "error_api_returned_failure": {
+            "name": "API returned failure",
+            "description": "API returned failure (unknown reason)"
+          },
+          "error_failed_to_submit_readings": {
+            "name": "Failed to submit readings",
+            "description": "Failed to submit readings: {error_msg}"
+          }
+        }
+      }
+    }
+  }
+}

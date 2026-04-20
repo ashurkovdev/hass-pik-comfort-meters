@@ -1,0 +1,92 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "PIK Comfort Meters",
+        "description": "Введите данные для входа в личный кабинет ПИК Комфорт",
+        "data": {
+          "phone": "Номер телефона",
+          "password": "Пароль",
+          "update_interval": "Интервал обновления (секунды)"
+        }
+      }
+    },
+    "error": {
+      "auth_failed": "Ошибка аутентификации. Проверьте телефон и пароль.",
+      "no_accounts": "Не найдено ни одного аккаунта для этого пользователя.",
+      "unknown": "Неизвестная ошибка. Проверьте журналы для подробностей."
+    },
+    "abort": {
+      "already_configured": "Учётная запись уже настроена"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Настройки PIK Comfort Meters",
+        "data": {
+          "update_interval": "Интервал обновления (секунды)"
+        }
+      }
+    }
+  }
+,
+  "services": {
+    "pik_comfort_meters": {
+      "strings": {
+        "value_accounted_label": "Учтённые",
+        "value_submitted_label": "Переданные",
+        "average_in_month_label": "Потребление за месяц",
+        "auth_failed_update": "Не удалось аутентифицироваться",
+        "fetch_meters_failed": "Не удалось получить данные счётчиков",
+        "update_failed": "Ошибка обновления: {err}",
+        "tariff_day": "(День)",
+        "tariff_night": "(Ночь)",
+        "tariff_morning_evening": "(Утро и вечер)",
+        "tariff_generic": "Тариф {num}",
+        "update_error": "Ошибка обновления данных PIK Comfort",
+        "submit_error": "Ошибка отправки показаний PIK Comfort"
+      },
+      "name": "PIK Comfort Meters",
+      "description": "Сервисы интеграции PIK Comfort Meters",
+      "submit_reading": {
+        "name": "Отправить показание",
+        "description": "Отправить показания счётчика для устройства",
+        "fields": {
+          "device_id": {
+            "name": "ID устройства",
+            "description": "ID устройства в реестре устройств"
+          },
+          "error_missing_device_id": {
+            "name": "Отсутствует ID устройства",
+            "description": "Отсутствует параметр: device_id"
+          },
+          "error_device_not_found": {
+            "name": "Устройство не найдено",
+            "description": "Устройство {device_id} не найдено"
+          },
+          "error_no_sensors_found": {
+            "name": "Сенсоры не найдены",
+            "description": "Для устройства {device_id} не найдено сенсоров"
+          },
+          "error_no_valid_readings": {
+            "name": "Нет допустимых показаний",
+            "description": "Нет допустимых показаний для устройства {device_id}"
+          },
+          "error_device_metadata_not_found": {
+            "name": "Метаданные не найдены",
+            "description": "Метаданные устройства не найдены для {device_unique_id}"
+          },
+          "error_api_returned_failure": {
+            "name": "API вернул неудачу",
+            "description": "API вернул неудачный ответ (неизвестная причина)"
+          },
+          "error_failed_to_submit_readings": {
+            "name": "Не удалось отправить показания",
+            "description": "Не удалось отправить показания: {error_msg}"
+          }
+        }
+      }
+    }
+  }
+}
