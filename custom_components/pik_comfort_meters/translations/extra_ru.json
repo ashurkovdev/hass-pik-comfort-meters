@@ -1,0 +1,14 @@
+{
+  "value_accounted_label": "Учтённые",
+  "value_submitted_label": "Переданные",
+  "average_in_month_label": "Потребление за месяц",
+  "auth_failed_update": "Не удалось аутентифицироваться",
+  "fetch_meters_failed": "Не удалось получить данные счётчиков",
+  "update_failed": "Ошибка обновления: {err}",
+  "tariff_day": "(День)",
+  "tariff_night": "(Ночь)",
+  "tariff_morning_evening": "(Утро и вечер)",
+  "tariff_generic": "Тариф {num}",
+  "update_error": "Ошибка обновления данных PIK Comfort",
+  "submit_error": "Ошибка отправки показаний PIK Comfort"
+}
