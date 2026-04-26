@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import aiohttp_client, device_registry as dr, entity_registry as er
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import DOMAIN, BINARY_SENSOR_SUBMIT_ERROR, CONF_TOKEN, CONF_ACCOUNT_UID
+from .const import DOMAIN, BINARY_SENSOR_SUBMIT_ERROR, BINARY_SENSOR_UPDATE_ERROR, CONF_TOKEN, CONF_ACCOUNT_UID
 from .api import PIKComfortAPI
 
 _LOGGER = logging.getLogger(__name__)
@@ -33,6 +33,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Трекер ошибок
     error_tracker = {
         BINARY_SENSOR_SUBMIT_ERROR: {
+            "error": False,
+            "last_attempt": None,
+            "last_success": None,
+            "last_error_message": None,
+        },
+        BINARY_SENSOR_UPDATE_ERROR: {
             "error": False,
             "last_attempt": None,
             "last_success": None,
@@ -200,8 +206,11 @@ async def _initialize_api(hass: HomeAssistant, entry: ConfigEntry) -> PIKComfort
 
 async def async_update_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Обновление опций интеграции."""
-    # При изменении интервала обновления просто перезагружаем интеграцию
-    await hass.config_entries.async_reload(entry.entry_id)
+    try:
+        # При изменении интервала обновления просто перезагружаем интеграцию
+        await hass.config_entries.async_reload(entry.entry_id)
+    except Exception as e:
+        _LOGGER.error("Error updating options for entry %s: %s", entry.entry_id, e)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
