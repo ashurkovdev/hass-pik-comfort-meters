@@ -101,17 +101,17 @@
 
 ### pik_comfort_meters.submit_reading
 
-Отправляет показания счётчика. Сервис использует `target` для выбора устройства.
+Отправляет показания счётчика.
 
 | Параметр | Тип | Обязательный | Описание |
 |----------|-----|--------------|----------|
-| `device_id` | list | да | Список идентификаторов устройств из Device Registry |
+| `device_id` | string | да | Идентификатор устройства из Device Registry |
 
 #### Пример вызова
 
 ```yaml
 service: pik_comfort_meters.submit_reading
-target:
+data:
   device_id: "1234567890abcdef"  # замените на реальный device_id
 ```
 
@@ -134,7 +134,7 @@ condition:
     value_template: "{{ now().day == 15 }}"
 action:
   - service: pik_comfort_meters.submit_reading
-    target:
+    data:
       device_id: "1234567890abcdef"  # замените на реальный device_id
 mode: single
 ```

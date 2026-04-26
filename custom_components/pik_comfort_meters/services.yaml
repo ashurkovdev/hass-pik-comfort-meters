@@ -1,7 +1,11 @@
 submit_reading:
   name: Submit Meter Reading
   description: Submits readings for all tariffs of the meter (device).
-  target:
-    device:
-      integration: pik_comfort_meters
-  fields: {}
+  fields:
+    device_id:
+      name: Device
+      description: The meter device to submit readings for.
+      required: true
+      selector:
+        device:
+          integration: pik_comfort_meters

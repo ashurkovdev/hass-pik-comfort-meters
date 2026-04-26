@@ -44,8 +44,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Регистрация сервиса submit_reading
     async def handle_submit(call: ServiceCall):
         """Отправка показаний для устройства по device_id."""
-        # device_id comes from target when using device selector
-        device_id = call.data.get("device_id", [None])[0] if call.data.get("device_id") else None
+        # device_id comes from fields with device selector (returns string)
+        device_id = call.data.get("device_id")
         if not device_id:
             raise HomeAssistantError("Missing parameter: device_id")
 
