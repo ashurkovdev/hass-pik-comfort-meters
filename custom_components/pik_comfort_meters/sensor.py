@@ -23,18 +23,12 @@ from .const import (
     CONF_ACCOUNT_UID,
     CONF_TOKEN,
     RESOURCE_TYPES,
-    RESOURCE_NAMES,
     UNIT_MAPPING,
     BINARY_SENSOR_UPDATE_ERROR,
 )
 from .api import PIKComfortAPI
-from .helpers import translate
-
-
-# Use the centralized `translate` helper from `helpers.py`
 
 _LOGGER = logging.getLogger(__name__)
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -53,7 +47,7 @@ async def async_setup_entry(
 
     if not api.token or not api.account_uid:
         if not await api.authenticate():
-            raise UpdateFailed(translate(hass, "auth_failed_update", section="errors"))
+            raise UpdateFailed("Authentication failed. Check phone and password.")
         await api.get_dashboard()
 
     # Трекер ошибок
@@ -76,7 +70,7 @@ async def async_setup_entry(
         meter_id = meter.get("_uid")
         resource_type = meter.get("resource_type")
         resource_key = RESOURCE_TYPES.get(resource_type, "unknown")
-        device_name = f"PIK {RESOURCE_NAMES.get(resource_type)} {factory_number}"
+        device_name = f"PIK meter: {resource_key} ({factory_number})"
         device_unique_id = f"{entry.entry_id}_{factory_number}"
 
         device = device_registry.async_get_or_create(
@@ -84,7 +78,7 @@ async def async_setup_entry(
             identifiers={(DOMAIN, device_unique_id)},
             name=device_name,
             manufacturer="PIK Comfort",
-            model=RESOURCE_NAMES.get(resource_type),
+            model=resource_key,
             sw_version="1.0",
             configuration_url="https://pik-comfort.ru",
         )
@@ -121,14 +115,13 @@ async def async_setup_entry(
             else:
                 # Localized display names for tariffs
                 if tariff_type == 1:
-                    display = translate(hass, "tariff_day", section="common")
+                    display = "(Day)"
                 elif tariff_type == 2:
-                    display = translate(hass, "tariff_night", section="common")
+                    display = "(Night)"
                 elif tariff_type == 3:
-                    display = translate(hass, "tariff_morning_evening", section="common")
+                    display = "(Morning & Evening)"
                 else:
-                    tpl = translate(hass, "tariff_generic", section="common")
-                    display = tpl.format(num=tariff_type)
+                    display = f"Tariff {tariff_type}"
                 sensor_name = f"{device_name} {display}"
 
             entity = PIKMeterSensor(
@@ -168,7 +161,7 @@ class PIKMetersCoordinator(DataUpdateCoordinator):
         try:
             meters = await self.api.get_account_meters()
             if meters is None:
-                raise UpdateFailed(translate(self.hass, "fetch_meters_failed", section="errors"))
+                raise UpdateFailed("Failed to get account meters")
             self.error_tracker[BINARY_SENSOR_UPDATE_ERROR]["error"] = False
             self.error_tracker[BINARY_SENSOR_UPDATE_ERROR]["last_success"] = datetime.now().isoformat()
             self.error_tracker[BINARY_SENSOR_UPDATE_ERROR]["last_error_message"] = None
@@ -178,7 +171,7 @@ class PIKMetersCoordinator(DataUpdateCoordinator):
             self.error_tracker[BINARY_SENSOR_UPDATE_ERROR]["error"] = True
             self.error_tracker[BINARY_SENSOR_UPDATE_ERROR]["last_error_message"] = str(err)
             self.async_update_listeners()
-            raise UpdateFailed(translate(self.hass, "update_failed", section="errors", err=str(err))) from err
+            raise UpdateFailed(f"Update error: {err}") from err
 
 
 class PIKMeterSensor(CoordinatorEntity, SensorEntity):
@@ -231,16 +224,10 @@ class PIKMeterSensor(CoordinatorEntity, SensorEntity):
                         self._state = accounted
 
                         # Prepare extra attributes to expose both accounted and submitted readings
-                        va_label = translate(self.hass, "value_accounted_label", section="common")
-                        vs_label = translate(self.hass, "value_submitted_label", section="common")
-                        avg_label = translate(self.hass, "average_in_month_label", section="common")
                         self._attrs = {
                             "value_accounted": accounted,
-                            "value_accounted_label": va_label,
                             "value_submitted": submitted,
-                            "value_submitted_label": vs_label,
                             "average_in_month": average,
-                            "average_in_month_label": avg_label,
                             "user_value_updated": user_updated,
                             "user_value_created": user_created,
                         }

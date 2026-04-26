@@ -11,7 +11,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, BINARY_SENSOR_UPDATE_ERROR, BINARY_SENSOR_SUBMIT_ERROR
-from .helpers import translate
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,8 +24,8 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][entry.entry_id]["coordinator"]
     error_tracker = hass.data[DOMAIN][entry.entry_id]["error_tracker"]
 
-    update_name = translate(hass, "update_error", section="binary")
-    submit_name = translate(hass, "submit_error", section="binary")
+    update_name = "Update Error"
+    submit_name = "Submit Error"
     entities = [
         PIKErrorBinarySensor(coordinator, error_tracker, BINARY_SENSOR_UPDATE_ERROR, update_name),
         PIKErrorBinarySensor(coordinator, error_tracker, BINARY_SENSOR_SUBMIT_ERROR, submit_name),

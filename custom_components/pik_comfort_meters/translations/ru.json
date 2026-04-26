@@ -14,7 +14,9 @@
     "error": {
       "auth_failed": "Ошибка аутентификации. Проверьте телефон и пароль.",
       "no_accounts": "Не найдено ни одного аккаунта для этого пользователя.",
-      "unknown": "Неизвестная ошибка. Проверьте журналы для подробностей."
+      "unknown": "Неизвестная ошибка. Проверьте журналы для подробностей.",
+      "fetch_meters_failed": "Не удалось получить данные счётчиков",
+      "update_failed": "Ошибка обновления: {err}"
     },
     "abort": {
       "already_configured": "Учётная запись уже настроена"
@@ -29,12 +31,9 @@
         }
       }
     }
-  }
-,
+  },
   "services": {
     "pik_comfort_meters": {
-      "name": "PIK Comfort Meters",
-      "description": "Сервисы интеграции PIK Comfort Meters",
       "submit_reading": {
         "name": "Отправить показание",
         "description": "Отправить показания счётчика для устройства",
@@ -42,34 +41,6 @@
           "device_id": {
             "name": "ID устройства",
             "description": "ID устройства в реестре устройств"
-          },
-          "error_missing_device_id": {
-            "name": "Отсутствует ID устройства",
-            "description": "Отсутствует параметр: device_id"
-          },
-          "error_device_not_found": {
-            "name": "Устройство не найдено",
-            "description": "Устройство {device_id} не найдено"
-          },
-          "error_no_sensors_found": {
-            "name": "Сенсоры не найдены",
-            "description": "Для устройства {device_id} не найдено сенсоров"
-          },
-          "error_no_valid_readings": {
-            "name": "Нет допустимых показаний",
-            "description": "Нет допустимых показаний для устройства {device_id}"
-          },
-          "error_device_metadata_not_found": {
-            "name": "Метаданные не найдены",
-            "description": "Метаданные устройства не найдены для {device_unique_id}"
-          },
-          "error_api_returned_failure": {
-            "name": "API вернул неудачу",
-            "description": "API вернул неудачный ответ (неизвестная причина)"
-          },
-          "error_failed_to_submit_readings": {
-            "name": "Не удалось отправить показания",
-            "description": "Не удалось отправить показания: {error_msg}"
           }
         }
       }

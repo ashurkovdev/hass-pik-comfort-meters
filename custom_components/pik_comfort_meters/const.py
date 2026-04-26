@@ -22,12 +22,6 @@ RESOURCE_TYPES = {
     3: "electricity",
 }
 
-RESOURCE_NAMES = {
-    1: "Холодная вода",
-    2: "Горячая вода",
-    3: "Электроэнергия",
-}
-
 UNIT_MAPPING = {
     1: "m³",
     2: "m³",
