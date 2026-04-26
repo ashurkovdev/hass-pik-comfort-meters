@@ -101,19 +101,21 @@
 
 ### pik_comfort_meters.submit_reading
 
-Отправляет показания счётчика.
+Отправляет показания счётчика. Сервис использует `target` для выбора устройства.
 
 | Параметр | Тип | Обязательный | Описание |
 |----------|-----|--------------|----------|
-| `device_id` | string | да | Идентификатор устройства из Device Registry |
+| `device_id` | list | да | Список идентификаторов устройств из Device Registry |
 
 #### Пример вызова
 
 ```yaml
 service: pik_comfort_meters.submit_reading
-data:
+target:
   device_id: "1234567890abcdef"  # замените на реальный device_id
 ```
+
+Или через UI: Developer Tools → Services → выберите сервис → выберите устройство в поле "Device".
 
 ## Примеры автоматизаций
 
@@ -132,7 +134,7 @@ condition:
     value_template: "{{ now().day == 15 }}"
 action:
   - service: pik_comfort_meters.submit_reading
-    data:
+    target:
       device_id: "1234567890abcdef"  # замените на реальный device_id
 mode: single
 ```
@@ -186,7 +188,7 @@ logger:
 ### Сенсоры не появляются после добавления интеграции
 
 1. Убедитесь, что аутентификация успешна (проверьте логи)
-2. Проверьте, что у аккаунта есть привязанные счётчики in the PIK Comfort personal account
+2. Проверьте, что у аккаунта есть привязанные счётчики в личном кабинете PIK Comfort
 3. Убедитесь, что телефон и пароль введены правильно
 
 ### Сервис submit_reading возвращает ошибку
