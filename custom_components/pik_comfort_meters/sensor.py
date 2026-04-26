@@ -288,6 +288,10 @@ class PIKMeterSensor(CoordinatorEntity, SensorEntity):
 
         self._state: Optional[float] = None
 
+        # Округление до 3 знаков после запятой для сенсоров показаний и потребления
+        if self._sensor_type in (SENSOR_TYPE_ACCOUNTED, SENSOR_TYPE_SUBMITTED, SENSOR_TYPE_CONSUMPTION):
+            self._attr_suggested_display_precision = 3
+
     @property
     def native_value(self):
         return self._state
