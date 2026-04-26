@@ -25,9 +25,20 @@
             "init": {
                 "title": "PIK Comfort Meters Options",
                 "data": {
-                    "update_interval": "Update interval (seconds, 3600-86400)"
+                    "update_interval": "Update interval (seconds, 3600-86400)",
+                    "password": "New password (leave empty to keep current)"
                 }
             }
+        },
+        "error": {
+            "auth_failed": "Authentication failed. Check phone and password.",
+            "no_accounts": "No meters found for this account.",
+            "unknown": "An unexpected error occurred."
+        },
+        "abort": {
+            "auth_failed": "Authentication failed. Check phone and password.",
+            "no_accounts": "No meters found for this account.",
+            "unknown": "An unexpected error occurred."
         }
     },
     "services": {

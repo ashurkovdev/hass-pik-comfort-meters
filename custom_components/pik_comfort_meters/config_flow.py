@@ -102,21 +102,76 @@ class PIKComfortOptionsFlow(config_entries.OptionsFlow):
     async def async_step_init(self, user_input=None) -> FlowResult:
         """Настройка опций."""
         if user_input is not None:
+            # Если пароль был изменен, нужно переаутентифицироваться
+            if CONF_PASSWORD in user_input and user_input[CONF_PASSWORD]:
+                phone = self.config_entry.data.get(CONF_PHONE)
+                password = user_input[CONF_PASSWORD]
+                
+                session = aiohttp_client.async_get_clientsession(self.hass)
+                api = PIKComfortAPI(session, phone, password)
+                
+                try:
+                    authenticated = await api.authenticate()
+                    if not authenticated:
+                        return self.async_abort(reason="auth_failed")
+                    
+                    await api.get_dashboard()
+                    
+                    if not api.account_uid:
+                        return self.async_abort(reason="no_accounts")
+                    
+                    # Обновляем конфигурацию с новым паролем и токеном
+                    self.hass.config_entries.async_update_entry(
+                        self.config_entry,
+                        data={
+                            **self.config_entry.data,
+                            CONF_PASSWORD: password,
+                            CONF_TOKEN: api.token,
+                            CONF_ACCOUNT_UID: api.account_uid,
+                        },
+                    )
+                    
+                    # Если интервал не был изменен, добавляем его из текущих данных
+                    if CONF_UPDATE_INTERVAL not in user_input:
+                        user_input[CONF_UPDATE_INTERVAL] = self.config_entry.data.get(
+                            CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL
+                        )
+                    
+                except Exception:
+                    _LOGGER.exception("Unexpected error during password change")
+                    return self.async_abort(reason="unknown")
+            else:
+                # Если пароль не менялся, просто обновляем интервал
+                self.hass.config_entries.async_update_entry(
+                    self.config_entry,
+                    data={
+                        **self.config_entry.data,
+                        CONF_UPDATE_INTERVAL: user_input.get(
+                            CONF_UPDATE_INTERVAL,
+                            self.config_entry.data.get(CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL),
+                        ),
+                    },
+                )
+            
             return self.async_create_entry(title="", data=user_input)
+
+        # Формируем схему с текущими значениями
+        schema = vol.Schema(
+            {
+                vol.Optional(
+                    CONF_UPDATE_INTERVAL,
+                    default=self.config_entry.data.get(
+                        CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL
+                    ),
+                ): vol.All(
+                    vol.Coerce(int),
+                    vol.Clamp(min=MIN_UPDATE_INTERVAL, max=MAX_UPDATE_INTERVAL),
+                ),
+                vol.Optional(CONF_PASSWORD): str,
+            }
+        )
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(
-                        CONF_UPDATE_INTERVAL,
-                        default=self.config_entry.data.get(
-                            CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL
-                        ),
-                    ): vol.All(
-                        vol.Coerce(int),
-                        vol.Clamp(min=MIN_UPDATE_INTERVAL, max=MAX_UPDATE_INTERVAL),
-                    ),
-                }
-            ),
+            data_schema=schema,
         )
