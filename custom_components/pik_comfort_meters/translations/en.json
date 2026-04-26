@@ -33,11 +33,11 @@
     "services": {
         "submit_reading": {
             "name": "Submit Meter Reading",
-            "description": "Submits readings for all tariffs of the meter (device). Select a PIK Comfort Meters device.",
+            "description": "Submits readings for all tariffs of the meter (device).",
             "fields": {
                 "device_id": {
                     "name": "Device",
-                    "description": "The meter device (e.g., \"PIK meter: hot_water (12345678)\")"
+                    "description": "The meter device to submit readings for."
                 }
             }
         }
@@ -45,34 +45,27 @@
     "entity": {
         "sensor": {
             "accounted": {
-                "name": "Accounted",
-                "description": "Accounted meter reading"
+                "name": "Accounted"
             },
             "submitted": {
-                "name": "Submitted",
-                "description": "Submitted meter reading"
+                "name": "Submitted"
             },
             "consumption": {
-                "name": "Monthly Consumption",
-                "description": "Monthly consumption"
+                "name": "Monthly Consumption"
             },
             "updated": {
-                "name": "Last Updated",
-                "description": "Last update timestamp"
+                "name": "Last Updated"
             },
             "created": {
-                "name": "Created",
-                "description": "Creation timestamp"
+                "name": "Created"
             }
         },
         "binary_sensor": {
             "update_error": {
-                "name": "Update Error",
-                "description": "Indicates if there was an error updating data"
+                "name": "Update Error"
             },
             "submit_error": {
-                "name": "Submit Error",
-                "description": "Indicates if there was an error submitting readings"
+                "name": "Submit Error"
             }
         }
     }
