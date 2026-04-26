@@ -273,13 +273,18 @@ class PIKMeterSensor(CoordinatorEntity, SensorEntity):
         self._attr_device_info = device_info
 
         resource_type = meter.get("resource_type")
-        self._attr_unit_of_measurement = UNIT_MAPPING.get(resource_type)
+        self._attr_unit_of_measurement = UNIT_MAPPING.get(resource_type, "kWh")
 
         # Устанавливаем device_class в зависимости от типа ресурса
         if resource_type in (1, 2):
             self._attr_device_class = "water"
         elif resource_type == 3:
             self._attr_device_class = "energy"
+        
+        _LOGGER.debug(
+            "Sensor %s: resource_type=%s, unit=%s, device_class=%s",
+            self._attr_unique_id, resource_type, self._attr_unit_of_measurement, self._attr_device_class
+        )
 
         self._state: Optional[float] = None
 
