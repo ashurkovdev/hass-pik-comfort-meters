@@ -82,9 +82,7 @@ async def async_setup_entry(
         "submit_error": {"error": False, "last_attempt": None, "last_success": None, "last_error_message": None},
     }
 
-    coordinator = PIKMetersCoordinator(hass, api, interval, error_tracker)
-    # expose config_entry on coordinator so other platforms can access entry_id
-    coordinator.config_entry = entry
+    coordinator = PIKMetersCoordinator(hass, api, interval, error_tracker, entry)
     await coordinator.async_config_entry_first_refresh()
 
     # Регистрация устройств и сенсоров
@@ -207,12 +205,20 @@ async def async_setup_entry(
 class PIKMetersCoordinator(DataUpdateCoordinator):
     """Координатор для обновления данных счетчиков."""
 
-    def __init__(self, hass: HomeAssistant, api: PIKComfortAPI, update_interval_sec: int, error_tracker: dict):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        api: PIKComfortAPI,
+        update_interval_sec: int,
+        error_tracker: dict,
+        config_entry: ConfigEntry,
+    ):
         super().__init__(
             hass,
             _LOGGER,
             name=DOMAIN,
             update_interval=timedelta(seconds=update_interval_sec),
+            config_entry=config_entry,
         )
         self.api = api
         self.error_tracker = error_tracker

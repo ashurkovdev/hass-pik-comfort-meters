@@ -4,5 +4,6 @@
     "zip_release": false,
     "render_readme": true,
     "country": "ru",
-    "homeassistant": "2021.11.0"
+    "homeassistant": "2021.11.0",
+    "version": "1.0.0"
 }
