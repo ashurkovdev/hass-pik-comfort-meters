@@ -85,6 +85,12 @@ async def async_setup_entry(
     coordinator = PIKMetersCoordinator(hass, api, interval, error_tracker, entry)
     await coordinator.async_config_entry_first_refresh()
 
+    _LOGGER.info("Coordinator data loaded: %d meters", len(coordinator.data) if coordinator.data else 0)
+    if coordinator.data:
+        for m in coordinator.data:
+            _LOGGER.info("Meter: factory_number=%s, _uid=%s, resource_type=%s, tariffs=%s",
+                        m.get("factory_number"), m.get("_uid"), m.get("resource_type"), m.get("tariffs"))
+
     # Регистрация устройств и сенсоров
     device_registry = dr.async_get(hass)
     entities = []
@@ -120,6 +126,7 @@ async def async_setup_entry(
         # Создаём сенсоры для каждого тарифа
         tariffs = meter.get("tariffs", [])
         tariff_count = len(tariffs)
+        _LOGGER.info("Meter %s has %d tariffs: %s", meter.get("factory_number"), tariff_count, tariffs)
 
         # Создаем device_info для всех сенсоров этого счетчика
         device_info = DeviceInfo(
@@ -200,6 +207,9 @@ async def async_setup_entry(
     hass.data[DOMAIN][entry.entry_id]["coordinator"] = coordinator
     hass.data[DOMAIN][entry.entry_id]["api"] = api
     hass.data[DOMAIN][entry.entry_id]["error_tracker"] = error_tracker
+    _LOGGER.info(
+        "Created %d sensor entities for %d meters", len(entities), len(coordinator.data) if coordinator.data else 0
+    )
 
 
 class PIKMetersCoordinator(DataUpdateCoordinator):
@@ -284,6 +294,9 @@ class PIKMeterSensor(CoordinatorEntity, SensorEntity):
     @callback
     def _handle_coordinator_update(self):
         meters = self.coordinator.data
+        if not meters:
+            _LOGGER.debug("No meters data available for sensor %s", self._attr_unique_id)
+            return
         for meter in meters:
             if meter.get("_uid") == self._meter.get("_uid"):
                 for tariff in meter.get("tariffs", []):
@@ -300,6 +313,10 @@ class PIKMeterSensor(CoordinatorEntity, SensorEntity):
                         elif self._sensor_type == SENSOR_TYPE_CONSUMPTION:
                             self._state = average
 
+                        _LOGGER.debug(
+                            "Sensor %s (type=%s) updated: value=%s, accounted=%s, submitted=%s, average=%s",
+                            self._attr_unique_id, self._sensor_type, self._state, accounted, submitted, average
+                        )
                         break
                 break
         self.async_write_ha_state()
@@ -346,6 +363,9 @@ class PIKMeterTimestampSensor(CoordinatorEntity, SensorEntity):
     @callback
     def _handle_coordinator_update(self):
         meters = self.coordinator.data
+        if not meters:
+            _LOGGER.debug("No meters data available for timestamp sensor %s", self._attr_unique_id)
+            return
         for meter in meters:
             if meter.get("_uid") == self._meter.get("_uid"):
                 for tariff in meter.get("tariffs", []):
@@ -371,6 +391,10 @@ class PIKMeterTimestampSensor(CoordinatorEntity, SensorEntity):
                             else:
                                 self._state = None
 
+                        _LOGGER.debug(
+                            "Timestamp sensor %s (type=%s) updated: user_updated=%s, user_created=%s, state=%s",
+                            self._attr_unique_id, self._sensor_type, user_updated, user_created, self._state
+                        )
                         break
                 break
         self.async_write_ha_state()

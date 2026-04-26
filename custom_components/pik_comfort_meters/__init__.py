@@ -147,6 +147,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(entry, ["sensor", "binary_sensor"])
 
     entry.async_on_unload(entry.add_update_listener(async_update_options))
+    _LOGGER.info("PIK Comfort Meters integration loaded successfully for entry %s", entry.entry_id)
     return True
 
 

@@ -179,7 +179,23 @@ class PIKComfortAPI:
         data = await self._request_with_retry("GET", url)
         if data:
             meters = data.get("meters", [])
-            _LOGGER.debug("Fetched %d meters", len(meters))
+            _LOGGER.info("Fetched %d meters from API", len(meters))
+            # Подробное логирование данных счетчиков для отладки
+            for i, meter in enumerate(meters):
+                _LOGGER.info(
+                    "Meter[%d]: factory_number=%s, _uid=%s, resource_type=%s, all_keys=%s",
+                    i, meter.get("factory_number"), meter.get("_uid"), 
+                    meter.get("resource_type"), list(meter.keys())
+                )
+                tariffs = meter.get("tariffs", [])
+                _LOGGER.info("  tariffs count=%d", len(tariffs))
+                for j, tariff in enumerate(tariffs):
+                    _LOGGER.info(
+                        "  tariff[%d]: type=%s, value=%s, user_value=%s, average_in_month=%s, user_value_updated=%s, user_value_created=%s, all_keys=%s",
+                        j, tariff.get("type"), tariff.get("value"), tariff.get("user_value"),
+                        tariff.get("average_in_month"), tariff.get("user_value_updated"),
+                        tariff.get("user_value_created"), list(tariff.keys())
+                    )
             return meters
         return None
 
