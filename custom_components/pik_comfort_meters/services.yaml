@@ -1,11 +1,7 @@
 submit_reading:
   name: Submit Meter Reading
-  description: Submits readings for all tariffs of the meter (device). Select a PIK Comfort Meters device.
-  fields:
-    device_id:
-      name: Device
-      description: The meter device (e.g., "PIK meter: hot_water (12345678)")
-      required: true
-      selector:
-        device:
-          integration: pik_comfort_meters
+  description: Submits readings for all tariffs of the meter (device).
+  target:
+    device:
+      integration: pik_comfort_meters
+  fields: {}
