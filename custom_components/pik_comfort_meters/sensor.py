@@ -25,6 +25,7 @@ from .const import (
     CONF_TOKEN,
     RESOURCE_TYPES,
     UNIT_MAPPING,
+    DEVICE_CLASS_MAPPING,
     BINARY_SENSOR_UPDATE_ERROR,
     SENSOR_TYPE_ACCOUNTED,
     SENSOR_TYPE_SUBMITTED,
@@ -274,12 +275,7 @@ class PIKMeterSensor(CoordinatorEntity, SensorEntity):
 
         resource_type = meter.get("resource_type")
         self._attr_unit_of_measurement = UNIT_MAPPING.get(resource_type, "kWh")
-
-        # Устанавливаем device_class в зависимости от типа ресурса
-        if resource_type in (1, 2):
-            self._attr_device_class = "water"
-        elif resource_type == 3:
-            self._attr_device_class = "energy"
+        self._attr_device_class = DEVICE_CLASS_MAPPING.get(resource_type)
         
         _LOGGER.debug(
             "Sensor %s: resource_type=%s, unit=%s, device_class=%s",

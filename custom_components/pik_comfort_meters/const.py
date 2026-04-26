@@ -28,6 +28,12 @@ UNIT_MAPPING = {
     3: "kWh",
 }
 
+DEVICE_CLASS_MAPPING = {
+    1: "water",
+    2: "water",
+    3: "energy",
+}
+
 # Идентификаторы для бинарных сенсоров ошибок
 BINARY_SENSOR_UPDATE_ERROR = "update_error"
 BINARY_SENSOR_SUBMIT_ERROR = "submit_error"
