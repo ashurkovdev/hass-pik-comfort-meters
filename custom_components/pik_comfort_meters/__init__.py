@@ -50,13 +50,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             raise HomeAssistantError(f"No sensors found for device {device_id}")
 
         # Сортируем по tariff_type (атрибут), безопасно обрабатываем None states
+        # Фильтруем только сенсоры с типом "accounted" для отправки показаний
         readings = []
         sensor_data = []
         for entity_id in sensor_entities:
             state = hass.states.get(entity_id)
             if state:
-                tariff_type = state.attributes.get("tariff_type", 0) if state.attributes else 0
-                sensor_data.append((tariff_type, entity_id, state))
+                sensor_type = state.attributes.get("sensor_type") if state.attributes else None
+                # Используем только сенсоры типа "accounted" для отправки показаний
+                if sensor_type == "accounted":
+                    tariff_type = state.attributes.get("tariff_type", 0) if state.attributes else 0
+                    sensor_data.append((tariff_type, entity_id, state))
         
         for tariff_type, entity_id, state in sorted(sensor_data, key=lambda x: x[0]):
             if state.state not in (None, "unknown", "unavailable"):

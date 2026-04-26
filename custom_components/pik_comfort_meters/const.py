@@ -31,3 +31,10 @@ UNIT_MAPPING = {
 # Идентификаторы для бинарных сенсоров ошибок
 BINARY_SENSOR_UPDATE_ERROR = "update_error"
 BINARY_SENSOR_SUBMIT_ERROR = "submit_error"
+
+# Типы сенсоров для счетчиков
+SENSOR_TYPE_ACCOUNTED = "accounted"
+SENSOR_TYPE_SUBMITTED = "submitted"
+SENSOR_TYPE_CONSUMPTION = "consumption"
+SENSOR_TYPE_UPDATED = "updated"
+SENSOR_TYPE_CREATED = "created"

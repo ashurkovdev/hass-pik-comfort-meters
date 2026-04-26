@@ -2,9 +2,10 @@
 
 import logging
 from datetime import datetime, timedelta
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorDeviceClass
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -25,10 +26,35 @@ from .const import (
     RESOURCE_TYPES,
     UNIT_MAPPING,
     BINARY_SENSOR_UPDATE_ERROR,
+    SENSOR_TYPE_ACCOUNTED,
+    SENSOR_TYPE_SUBMITTED,
+    SENSOR_TYPE_CONSUMPTION,
+    SENSOR_TYPE_UPDATED,
+    SENSOR_TYPE_CREATED,
 )
 from .api import PIKComfortAPI
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _get_tariff_suffix(tariff_count: int, tariff_type: int) -> str:
+    """Возвращает суффикс для unique_id в зависимости от количества тарифов."""
+    return "" if tariff_count == 1 else f"_t{tariff_type}"
+
+
+def _get_display_suffix(tariff_count: int, tariff_type: int) -> str:
+    """Возвращает суффикс для имени в зависимости от количества тарифов."""
+    if tariff_count == 1:
+        return ""
+    if tariff_type == 1:
+        return " (Day)"
+    elif tariff_type == 2:
+        return " (Night)"
+    elif tariff_type == 3:
+        return " (Morning & Evening)"
+    else:
+        return f" Tariff {tariff_type}"
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -96,44 +122,76 @@ async def async_setup_entry(
         # Создаём сенсоры для каждого тарифа
         tariffs = meter.get("tariffs", [])
         tariff_count = len(tariffs)
+        
+        # Создаем device_info для всех сенсоров этого счетчика
+        device_info = DeviceInfo(
+            identifiers={(DOMAIN, device_unique_id)},
+            name=device_name,
+            manufacturer="PIK Comfort",
+            model=resource_key,
+            sw_version="1.0",
+            configuration_url="https://pik-comfort.ru",
+        )
+        
         for tariff in tariffs:
             tariff_type = tariff.get("type")
-            # Unique ID rules:
-            # - If meter has only 1 tariff, omit _t<tariff_type> suffix
-            # - Otherwise include _t<tariff_type>
-            if tariff_count == 1:
-                sensor_unique_id = f"pik_comfort_meters_{factory_number}"
-            else:
-                sensor_unique_id = f"pik_comfort_meters_{factory_number}_t{tariff_type}"
+            tariff_suffix = _get_tariff_suffix(tariff_count, tariff_type)
+            display_suffix = _get_display_suffix(tariff_count, tariff_type)
 
-            # Display name rules:
-            # - If only 1 tariff, do not append tariff text
-            # - If 2 tariffs: tariff 1 -> (День), tariff 2 -> (Ночь)
-            # - If 3 tariffs: tariff 1 -> (День), tariff 2 -> (Ночь), tariff 3 -> Утро и вечер
-            if tariff_count == 1:
-                sensor_name = device_name
-            else:
-                # Localized display names for tariffs
-                if tariff_type == 1:
-                    display = "(Day)"
-                elif tariff_type == 2:
-                    display = "(Night)"
-                elif tariff_type == 3:
-                    display = "(Morning & Evening)"
-                else:
-                    display = f"Tariff {tariff_type}"
-                sensor_name = f"{device_name} {display}"
-
-            entity = PIKMeterSensor(
+            # 1. Сенсор учтенных показаний (accounted)
+            entities.append(PIKMeterSensor(
                 coordinator=coordinator,
                 meter=meter,
                 tariff_type=tariff_type,
-                unique_id=sensor_unique_id,
-                name=sensor_name,
-                device_id=device.id,
-                device_unique_id=device_unique_id,
-            )
-            entities.append(entity)
+                sensor_type=SENSOR_TYPE_ACCOUNTED,
+                unique_id=f"pik_comfort_meters{factory_number}_accounted{tariff_suffix}",
+                name=f"{device_name}{display_suffix} Accounted",
+                device_info=device_info,
+            ))
+
+            # 2. Сенсор переданных показаний (submitted)
+            entities.append(PIKMeterSensor(
+                coordinator=coordinator,
+                meter=meter,
+                tariff_type=tariff_type,
+                sensor_type=SENSOR_TYPE_SUBMITTED,
+                unique_id=f"pik_comfort_meters{factory_number}_submitted{tariff_suffix}",
+                name=f"{device_name}{display_suffix} Submitted",
+                device_info=device_info,
+            ))
+
+            # 3. Сенсор потребления за месяц (consumption)
+            entities.append(PIKMeterSensor(
+                coordinator=coordinator,
+                meter=meter,
+                tariff_type=tariff_type,
+                sensor_type=SENSOR_TYPE_CONSUMPTION,
+                unique_id=f"pik_comfort_meters{factory_number}_consumption{tariff_suffix}",
+                name=f"{device_name}{display_suffix} Monthly Consumption",
+                device_info=device_info,
+            ))
+
+            # 4. Сенсор даты обновления показаний (timestamp)
+            entities.append(PIKMeterTimestampSensor(
+                coordinator=coordinator,
+                meter=meter,
+                tariff_type=tariff_type,
+                sensor_type=SENSOR_TYPE_UPDATED,
+                unique_id=f"pik_comfort_meters{factory_number}_updated{tariff_suffix}",
+                name=f"{device_name}{display_suffix} Last Updated",
+                device_info=device_info,
+            ))
+
+            # 5. Сенсор даты создания показаний (timestamp)
+            entities.append(PIKMeterTimestampSensor(
+                coordinator=coordinator,
+                meter=meter,
+                tariff_type=tariff_type,
+                sensor_type=SENSOR_TYPE_CREATED,
+                unique_id=f"pik_comfort_meters{factory_number}_created{tariff_suffix}",
+                name=f"{device_name}{display_suffix} Created",
+                device_info=device_info,
+            ))
 
     async_add_entities(entities, True)
 
@@ -175,37 +233,44 @@ class PIKMetersCoordinator(DataUpdateCoordinator):
 
 
 class PIKMeterSensor(CoordinatorEntity, SensorEntity):
-    """Сенсор для одного тарифа счётчика."""
+    """Сенсор для показаний счётчика (учтенные, переданные, потребление)."""
 
-    def __init__(self, coordinator, meter: Dict[str, Any], tariff_type: int, unique_id: str, name: str, device_id: str, device_unique_id: str):
+    def __init__(
+        self,
+        coordinator,
+        meter: Dict[str, Any],
+        tariff_type: int,
+        sensor_type: str,
+        unique_id: str,
+        name: str,
+        device_info: DeviceInfo,
+    ):
         super().__init__(coordinator)
         self._meter = meter
         self._tariff_type = tariff_type
+        self._sensor_type = sensor_type
         self._attr_unique_id = unique_id
         self._attr_name = name
-        self._attr_device_id = device_id
-        self._device_unique_id = device_unique_id
+        self._attr_device_info = device_info
+        
         resource_type = meter.get("resource_type")
         self._attr_unit_of_measurement = UNIT_MAPPING.get(resource_type)
-        self._attr_device_class = "water" if resource_type in (1, 2) else "energy" if resource_type == 3 else None
-        self._state = None
-        self._attrs = {}
+        
+        # Устанавливаем device_class в зависимости от типа ресурса
+        if resource_type in (1, 2):
+            self._attr_device_class = "water"
+        elif resource_type == 3:
+            self._attr_device_class = "energy"
+        
+        self._state: Optional[float] = None
 
     @property
     def native_value(self):
         return self._state
 
     @property
-    def device_info(self):
-        # Return device identifiers using the unique id created when the device was registered
-        return {"identifiers": {(DOMAIN, self._device_unique_id)}}
-
-    @property
     def extra_state_attributes(self):
-        data = {"tariff_type": self._tariff_type}
-        # Merge in any collected attributes from the latest coordinator update
-        data.update(self._attrs or {})
-        return data
+        return {"tariff_type": self._tariff_type, "sensor_type": self._sensor_type}
 
     @callback
     def _handle_coordinator_update(self):
@@ -214,23 +279,89 @@ class PIKMeterSensor(CoordinatorEntity, SensorEntity):
             if meter.get("_uid") == self._meter.get("_uid"):
                 for tariff in meter.get("tariffs", []):
                     if tariff.get("type") == self._tariff_type:
-                        # Primary sensor value: 'value' from API is considered 'accounted' (учтенные)
                         accounted = tariff.get("value")
                         submitted = tariff.get("user_value")
                         average = tariff.get("average_in_month")
+
+                        # Устанавливаем значение в зависимости от типа сенсора
+                        if self._sensor_type == SENSOR_TYPE_ACCOUNTED:
+                            self._state = accounted
+                        elif self._sensor_type == SENSOR_TYPE_SUBMITTED:
+                            self._state = submitted
+                        elif self._sensor_type == SENSOR_TYPE_CONSUMPTION:
+                            self._state = average
+
+                        break
+                break
+        self.async_write_ha_state()
+
+    async def async_added_to_hass(self):
+        self.async_on_remove(self.coordinator.async_add_listener(self._handle_coordinator_update))
+        self._handle_coordinator_update()
+
+
+class PIKMeterTimestampSensor(CoordinatorEntity, SensorEntity):
+    """Сенсор для дат (дата обновления, дата создания)."""
+
+    def __init__(
+        self,
+        coordinator,
+        meter: Dict[str, Any],
+        tariff_type: int,
+        sensor_type: str,
+        unique_id: str,
+        name: str,
+        device_info: DeviceInfo,
+    ):
+        super().__init__(coordinator)
+        self._meter = meter
+        self._tariff_type = tariff_type
+        self._sensor_type = sensor_type
+        self._attr_unique_id = unique_id
+        self._attr_name = name
+        self._attr_device_info = device_info
+        
+        # Для timestamp сенсоров используем device_class timestamp
+        self._attr_device_class = SensorDeviceClass.TIMESTAMP
+        
+        self._state: Optional[datetime] = None
+
+    @property
+    def native_value(self):
+        return self._state
+
+    @property
+    def extra_state_attributes(self):
+        return {"tariff_type": self._tariff_type, "sensor_type": self._sensor_type}
+
+    @callback
+    def _handle_coordinator_update(self):
+        meters = self.coordinator.data
+        for meter in meters:
+            if meter.get("_uid") == self._meter.get("_uid"):
+                for tariff in meter.get("tariffs", []):
+                    if tariff.get("type") == self._tariff_type:
                         user_updated = tariff.get("user_value_updated")
                         user_created = tariff.get("user_value_created")
 
-                        self._state = accounted
+                        # Устанавливаем значение в зависимости от типа сенсора
+                        if self._sensor_type == SENSOR_TYPE_UPDATED:
+                            if user_updated:
+                                try:
+                                    self._state = datetime.fromisoformat(user_updated.replace('Z', '+00:00'))
+                                except (ValueError, AttributeError):
+                                    self._state = None
+                            else:
+                                self._state = None
+                        elif self._sensor_type == SENSOR_TYPE_CREATED:
+                            if user_created:
+                                try:
+                                    self._state = datetime.fromisoformat(user_created.replace('Z', '+00:00'))
+                                except (ValueError, AttributeError):
+                                    self._state = None
+                            else:
+                                self._state = None
 
-                        # Prepare extra attributes to expose both accounted and submitted readings
-                        self._attrs = {
-                            "value_accounted": accounted,
-                            "value_submitted": submitted,
-                            "average_in_month": average,
-                            "user_value_updated": user_updated,
-                            "user_value_created": user_created,
-                        }
                         break
                 break
         self.async_write_ha_state()
