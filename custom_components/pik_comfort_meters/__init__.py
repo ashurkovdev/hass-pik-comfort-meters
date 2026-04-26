@@ -55,39 +55,54 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if not device:
             raise HomeAssistantError(f"Device {device_id} not found")
 
-        # Находим все сенсоры, принадлежащие этому устройству
-        entity_registry = er.async_get(hass)
-        sensor_entities = []
-        for entity in entity_registry.entities.values():
-            if (
-                entity.device_id == device_id
-                and entity.domain == "sensor"
-                and entity.platform == DOMAIN
-            ):
-                sensor_entities.append(entity.entity_id)
+        # Проверяем, переданы ли показания явно
+        readings = None
+        if "readings" in call.data:
+            readings_data = call.data.get("readings")
+            if isinstance(readings_data, (int, float)):
+                readings = [float(readings_data)]
+            elif isinstance(readings_data, list):
+                readings = [float(r) for r in readings_data]
+            else:
+                raise HomeAssistantError(f"Invalid readings format: {type(readings_data)}")
+            if not readings:
+                raise HomeAssistantError("Empty readings provided")
 
-        if not sensor_entities:
-            raise HomeAssistantError(f"No sensors found for device {device_id}")
+        # Если показания не переданы, берем текущие значения сенсоров
+        if readings is None:
+            # Находим все сенсоры, принадлежащие этому устройству
+            entity_registry = er.async_get(hass)
+            sensor_entities = []
+            for entity in entity_registry.entities.values():
+                if (
+                    entity.device_id == device_id
+                    and entity.domain == "sensor"
+                    and entity.platform == DOMAIN
+                ):
+                    sensor_entities.append(entity.entity_id)
 
-        # Сортируем по tariff_type (атрибут), безопасно обрабатываем None states
-        # Фильтруем только сенсоры с типом "accounted" для отправки показаний
-        readings = []
-        sensor_data = []
-        for entity_id in sensor_entities:
-            state = hass.states.get(entity_id)
-            if state:
-                sensor_type = state.attributes.get("sensor_type") if state.attributes else None
-                # Используем только сенсоры типа "accounted" для отправки показаний
-                if sensor_type == "accounted":
-                    tariff_type = state.attributes.get("tariff_type", 0) if state.attributes else 0
-                    sensor_data.append((tariff_type, entity_id, state))
+            if not sensor_entities:
+                raise HomeAssistantError(f"No sensors found for device {device_id}")
 
-        for tariff_type, entity_id, state in sorted(sensor_data, key=lambda x: x[0]):
-            if state.state not in (None, "unknown", "unavailable"):
-                readings.append(float(state.state))
+            # Сортируем по tariff_type (атрибут), безопасно обрабатываем None states
+            # Фильтруем только сенсоры типа "accounted" для отправки показаний
+            readings = []
+            sensor_data = []
+            for entity_id in sensor_entities:
+                state = hass.states.get(entity_id)
+                if state:
+                    sensor_type = state.attributes.get("sensor_type") if state.attributes else None
+                    # Используем только сенсоры типа "accounted" для отправки показаний
+                    if sensor_type == "accounted":
+                        tariff_type = state.attributes.get("tariff_type", 0) if state.attributes else 0
+                        sensor_data.append((tariff_type, entity_id, state))
 
-        if not readings:
-            raise HomeAssistantError(f"No valid readings for device {device_id}")
+            for tariff_type, entity_id, state in sorted(sensor_data, key=lambda x: x[0]):
+                if state.state not in (None, "unknown", "unavailable"):
+                    readings.append(float(state.state))
+
+            if not readings:
+                raise HomeAssistantError(f"No valid readings for device {device_id}")
 
         # Получаем meter_id из сохранённых метаданных устройства
         # device.identifiers is a set of tuples like {(domain, unique_id)}

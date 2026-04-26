@@ -44,11 +44,15 @@
     "services": {
         "submit_reading": {
             "name": "Submit Meter Reading",
-            "description": "Submits readings for all tariffs of the meter (device).",
+            "description": "Submits readings for all tariffs of the meter (device). If readings are not provided, current sensor values are used.",
             "fields": {
                 "device_id": {
                     "name": "Device",
                     "description": "The meter device to submit readings for."
+                },
+                "readings": {
+                    "name": "Readings",
+                    "description": "Meter readings to submit. Can be a single number (for single-tariff meters) or a list of numbers (for multi-tariff meters, in order: tariff 1, tariff 2, tariff 3). If not provided, current sensor values are used."
                 }
             }
         }
