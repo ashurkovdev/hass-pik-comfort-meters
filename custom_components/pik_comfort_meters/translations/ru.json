@@ -1,49 +1,79 @@
 {
-  "config": {
-    "step": {
-      "user": {
-        "title": "PIK Comfort Meters",
-        "description": "Введите данные для входа в личный кабинет ПИК Комфорт",
-        "data": {
-          "phone": "Номер телефона",
-          "password": "Пароль",
-          "update_interval": "Интервал обновления (секунды)"
+    "config": {
+        "step": {
+            "user": {
+                "title": "PIK Comfort Meters",
+                "description": "Введите данные вашего аккаунта PIK Comfort.",
+                "data": {
+                    "phone": "Номер телефона",
+                    "password": "Пароль",
+                    "update_interval": "Интервал обновления (секунды, 3600-86400)"
+                }
+            }
+        },
+        "error": {
+            "auth_failed": "Ошибка аутентификации. Проверьте телефон и пароль.",
+            "no_accounts": "Для аккаунта не найдено счётчиков.",
+            "unknown": "Произошла непредвиденная ошибка."
+        },
+        "abort": {
+            "already_configured": "Аккаунт уже настроен."
         }
-      }
     },
-    "error": {
-      "auth_failed": "Ошибка аутентификации. Проверьте телефон и пароль.",
-      "no_accounts": "Не найдено ни одного аккаунта для этого пользователя.",
-      "unknown": "Неизвестная ошибка. Проверьте журналы для подробностей.",
-      "fetch_meters_failed": "Не удалось получить данные счётчиков",
-      "update_failed": "Ошибка обновления: {err}"
+    "options": {
+        "step": {
+            "init": {
+                "title": "Настройки PIK Comfort Meters",
+                "data": {
+                    "update_interval": "Интервал обновления (секунды, 3600-86400)"
+                }
+            }
+        }
     },
-    "abort": {
-      "already_configured": "Учётная запись уже настроена"
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "title": "Настройки PIK Comfort Meters",
-        "data": {
-          "update_interval": "Интервал обновления (секунды)"
+    "services": {
+        "submit_reading": {
+            "name": "Отправить показания счетчика",
+            "description": "Отправляет показания для всех тарифов счетчика (устройства). Выберите устройство PIK Comfort Meters.",
+            "fields": {
+                "device_id": {
+                    "name": "Устройство",
+                    "description": "Устройство счетчика (например, \"PIK meter: hot_water (12345678)\")"
+                }
+            }
         }
-      }
-    }
-  },
-  "services": {
-    "pik_comfort_meters": {
-      "submit_reading": {
-        "name": "Отправить показание",
-        "description": "Отправить показания счётчика для устройства",
-        "fields": {
-          "device_id": {
-            "name": "ID устройства",
-            "description": "ID устройства в реестре устройств"
-          }
+    },
+    "entity": {
+        "sensor": {
+            "accounted": {
+                "name": "Учтено",
+                "description": "Учтенные показания счетчика"
+            },
+            "submitted": {
+                "name": "Передано",
+                "description": "Переданные показания счетчика"
+            },
+            "consumption": {
+                "name": "Потребление за месяц",
+                "description": "Потребление за текущий месяц"
+            },
+            "updated": {
+                "name": "Последнее обновление",
+                "description": "Дата последнего обновления показаний"
+            },
+            "created": {
+                "name": "Создано",
+                "description": "Дата создания показаний"
+            }
+        },
+        "binary_sensor": {
+            "update_error": {
+                "name": "Ошибка обновления данных",
+                "description": "Показывает, была ли ошибка при обновлении данных"
+            },
+            "submit_error": {
+                "name": "Ошибка отправки показаний",
+                "description": "Показывает, была ли ошибка при отправке показаний"
+            }
         }
-      }
     }
-  }
 }

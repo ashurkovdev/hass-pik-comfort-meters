@@ -1,49 +1,79 @@
 {
-  "config": {
-    "step": {
-      "user": {
-        "title": "PIK Comfort Meters",
-        "description": "Enter credentials for PIK Comfort portal",
-        "data": {
-          "phone": "Phone number",
-          "password": "Password",
-          "update_interval": "Update interval (seconds)"
+    "config": {
+        "step": {
+            "user": {
+                "title": "PIK Comfort Meters",
+                "description": "Enter your PIK Comfort account credentials.",
+                "data": {
+                    "phone": "Phone number",
+                    "password": "Password",
+                    "update_interval": "Update interval (seconds, 3600-86400)"
+                }
+            }
+        },
+        "error": {
+            "auth_failed": "Authentication failed. Check phone and password.",
+            "no_accounts": "No meters found for this account.",
+            "unknown": "An unexpected error occurred."
+        },
+        "abort": {
+            "already_configured": "Account is already configured."
         }
-      }
     },
-    "error": {
-      "auth_failed": "Authentication failed. Check phone and password.",
-      "no_accounts": "No accounts found for this user.",
-      "unknown": "Unknown error. Check logs for details.",
-      "fetch_meters_failed": "Failed to get account meters",
-      "update_failed": "Update error: {err}"
+    "options": {
+        "step": {
+            "init": {
+                "title": "PIK Comfort Meters Options",
+                "data": {
+                    "update_interval": "Update interval (seconds, 3600-86400)"
+                }
+            }
+        }
     },
-    "abort": {
-      "already_configured": "Account is already configured"
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "title": "PIK Comfort Meters Options",
-        "data": {
-          "update_interval": "Update interval (seconds)"
+    "services": {
+        "submit_reading": {
+            "name": "Submit Meter Reading",
+            "description": "Submits readings for all tariffs of the meter (device). Select a PIK Comfort Meters device.",
+            "fields": {
+                "device_id": {
+                    "name": "Device",
+                    "description": "The meter device (e.g., \"PIK meter: hot_water (12345678)\")"
+                }
+            }
         }
-      }
-    }
-  },
-  "services": {
-    "pik_comfort_meters": {
-      "submit_reading": {
-        "name": "Submit Reading",
-        "description": "Submit meter readings for a device",
-        "fields": {
-          "device_id": {
-            "name": "Device ID",
-            "description": "The device registry ID to submit readings for"
-          }
+    },
+    "entity": {
+        "sensor": {
+            "accounted": {
+                "name": "Accounted",
+                "description": "Accounted meter reading"
+            },
+            "submitted": {
+                "name": "Submitted",
+                "description": "Submitted meter reading"
+            },
+            "consumption": {
+                "name": "Monthly Consumption",
+                "description": "Monthly consumption"
+            },
+            "updated": {
+                "name": "Last Updated",
+                "description": "Last update timestamp"
+            },
+            "created": {
+                "name": "Created",
+                "description": "Creation timestamp"
+            }
+        },
+        "binary_sensor": {
+            "update_error": {
+                "name": "Update Error",
+                "description": "Indicates if there was an error updating data"
+            },
+            "submit_error": {
+                "name": "Submit Error",
+                "description": "Indicates if there was an error submitting readings"
+            }
         }
-      }
     }
-  }
 }
