@@ -125,14 +125,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 submit_tracker["error"] = False
                 submit_tracker["last_success"] = datetime.now().isoformat()
                 submit_tracker["last_error_message"] = None
+                # Немедленно обновляем данные после успешной отправки показаний
                 if coordinator:
-                    coordinator.async_update_listeners()
+                    await coordinator.async_request_refresh()
             else:
                 error_msg = "API returned failure (unknown reason)"
                 submit_tracker["error"] = True
                 submit_tracker["last_error_message"] = error_msg
-                if coordinator:
-                    coordinator.async_update_listeners()
                 raise HomeAssistantError(error_msg)
         except Exception as e:
             error_msg = str(e)
