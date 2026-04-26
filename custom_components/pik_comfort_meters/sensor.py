@@ -91,7 +91,7 @@ async def async_setup_entry(
     device_registry = dr.async_get(hass)
     entities = []
 
-    for meter in coordinator.data:
+    for meter in coordinator.data or []:
         factory_number = meter.get("factory_number")
         meter_id = meter.get("_uid")
         resource_type = meter.get("resource_type")
@@ -122,7 +122,7 @@ async def async_setup_entry(
         # Создаём сенсоры для каждого тарифа
         tariffs = meter.get("tariffs", [])
         tariff_count = len(tariffs)
-        
+
         # Создаем device_info для всех сенсоров этого счетчика
         device_info = DeviceInfo(
             identifiers={(DOMAIN, device_unique_id)},
@@ -132,7 +132,7 @@ async def async_setup_entry(
             sw_version="1.0",
             configuration_url="https://pik-comfort.ru",
         )
-        
+
         for tariff in tariffs:
             tariff_type = tariff.get("type")
             tariff_suffix = _get_tariff_suffix(tariff_count, tariff_type)
@@ -193,6 +193,9 @@ async def async_setup_entry(
                 device_info=device_info,
             ))
 
+    if len(entities) == 0:
+        _LOGGER.warning("No meters found for account %s. Check your PIK account.", api.account_uid)
+
     async_add_entities(entities, True)
 
     # Сохраняем координатор и API для других компонентов
@@ -252,16 +255,16 @@ class PIKMeterSensor(CoordinatorEntity, SensorEntity):
         self._attr_unique_id = unique_id
         self._attr_name = name
         self._attr_device_info = device_info
-        
+
         resource_type = meter.get("resource_type")
         self._attr_unit_of_measurement = UNIT_MAPPING.get(resource_type)
-        
+
         # Устанавливаем device_class в зависимости от типа ресурса
         if resource_type in (1, 2):
             self._attr_device_class = "water"
         elif resource_type == 3:
             self._attr_device_class = "energy"
-        
+
         self._state: Optional[float] = None
 
     @property
@@ -295,8 +298,8 @@ class PIKMeterSensor(CoordinatorEntity, SensorEntity):
                 break
         self.async_write_ha_state()
 
-    async def async_added_to_hass(self):
-        self.async_on_remove(self.coordinator.async_add_listener(self._handle_coordinator_update))
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
         self._handle_coordinator_update()
 
 
@@ -320,10 +323,10 @@ class PIKMeterTimestampSensor(CoordinatorEntity, SensorEntity):
         self._attr_unique_id = unique_id
         self._attr_name = name
         self._attr_device_info = device_info
-        
+
         # Для timestamp сенсоров используем device_class timestamp
         self._attr_device_class = SensorDeviceClass.TIMESTAMP
-        
+
         self._state: Optional[datetime] = None
 
     @property
@@ -366,6 +369,6 @@ class PIKMeterTimestampSensor(CoordinatorEntity, SensorEntity):
                 break
         self.async_write_ha_state()
 
-    async def async_added_to_hass(self):
-        self.async_on_remove(self.coordinator.async_add_listener(self._handle_coordinator_update))
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
         self._handle_coordinator_update()
