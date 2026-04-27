@@ -1,10 +1,10 @@
 {
   "domain": "pik_comfort_meters",
-  "name": "PIK Comfort Meters",
+  "name": "PIK Comfort Meters / ПИК Комфорт - подача показаний",
   "codeowners": ["@ashurkovdev"],
   "config_flow": true,
   "dependencies": [],
-  "documentation": "https://github.com/ashurkovdev/hass-pik_comfort_meters",
+  "documentation": "https://github.com/ashurkovdev/hass-pik-comfort-meters",
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/ashurkovdev/hass-pik_comfort_meters/issues",
   "requirements": ["aiohttp>=3.8.0"],

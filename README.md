@@ -1,5 +1,8 @@
 # PIK Comfort Meters — интеграция для Home Assistant
 
+**Версия:** 1.0.0  
+**Минимальная версия Home Assistant:** 2021.11.0
+
 [![Validate with hassfest](https://github.com/ashurkovdev/hass-pik-comfort-meters/actions/workflows/hassfest.yaml/badge.svg?branch=main)](https://github.com/ashurkovdev/hass-pik-comfort-meters/actions/workflows/hassfest.yaml)
 [![HACS Action](https://github.com/ashurkovdev/hass-pik-comfort-meters/actions/workflows/hacs.yaml/badge.svg?branch=main)](https://github.com/ashurkovdev/hass-pik-comfort-meters/actions/workflows/hacs.yaml)
 
@@ -75,17 +78,21 @@
 | **Last Updated** | Дата последнего обновления показаний | timestamp |
 | **Created** | Дата создания показаний | timestamp |
 
-#### Правила формирования unique_id и entity_id
+#### Формат unique_id
 
-- **Однотарифный счётчик** (factory 250314753):
-  - `unique_id`: `pik_comfort_meters_250314753`
-  - `entity_id`: `sensor.pik_comfort_meters_250314753`
-  - `name`: `PIK meter: hot_water (250314753)`
+`unique_id` формируется по шаблону: `pik_comfort_meters{factory_number}_{тип_сенсора}_{тариф}`
 
-- **Двухтарифный счётчик** (factory 250314753), тариф 1:
-  - `unique_id`: `pik_comfort_meters_250314753_t1`
-  - `entity_id`: `sensor.pik_comfort_meters_250314753_t1`
-  - `name`: `PIK meter: hot_water (250314753) (Day)`
+| Тип счетчика | Пример unique_id |
+|--------------|------------------|
+| Учтённые показания, однотарифный | `pik_comfort_meters250314753_accounted` |
+| Учтённые показания, двухтарифный, тариф 1 | `pik_comfort_meters250314753_accounted_t1` |
+| Учтённые показания, трёхтарифный, тариф 3 | `pik_comfort_meters250314753_accounted_t3` |
+| Переданные показания, двухтарифный, тариф 2 | `pik_comfort_meters250314753_submitted_t2` |
+| Потребление за месяц, однотарифный | `pik_comfort_meters250314753_consumption` |
+| Дата обновления, однотарифный | `pik_comfort_meters250314753_updated` |
+| Дата создания, двухтарифный, тариф 1 | `pik_comfort_meters250314753_created_t1` |
+
+> **Примечание:** `entity_id` формируется автоматически Home Assistant на основе имени устройства и типа сенсора. Для точного значения проверьте настройки сущности в интерфейсе Home Assistant.
 
 #### Обозначения тарифов
 
