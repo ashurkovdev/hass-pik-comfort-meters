@@ -8,10 +8,11 @@ from typing import List, Union, Dict, Any
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import aiohttp_client, device_registry as dr, entity_registry as er
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ConfigEntryNotReady
 
-from .const import DOMAIN, BINARY_SENSOR_SUBMIT_ERROR, BINARY_SENSOR_UPDATE_ERROR, CONF_TOKEN, CONF_ACCOUNT_UID
+from .const import DOMAIN, BINARY_SENSOR_SUBMIT_ERROR, BINARY_SENSOR_UPDATE_ERROR, CONF_TOKEN, CONF_ACCOUNT_UID, CONF_UPDATE_INTERVAL
 from .api import PIKComfortAPI
+from .sensor import PIKMetersCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,7 +31,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data[DOMAIN][entry.entry_id]["api"] = api
 
-    # Трекер ошибок
+    # Создаём единый координатор
+    interval = entry.data.get(CONF_UPDATE_INTERVAL, 21600)
     error_tracker = {
         BINARY_SENSOR_SUBMIT_ERROR: {
             "error": False,
@@ -45,6 +47,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             "last_error_message": None,
         },
     }
+
+    coordinator = PIKMetersCoordinator(hass, api, interval, error_tracker, entry)
+
+    # Первая попытка загрузки данных
+    try:
+        await coordinator.async_config_entry_first_refresh()
+    except Exception as err:
+        _LOGGER.error("Failed to load data for %s: %s", entry.entry_id, err)
+        raise ConfigEntryNotReady(f"Initial data fetch failed: {err}") from err
+
+    hass.data[DOMAIN][entry.entry_id]["coordinator"] = coordinator
     hass.data[DOMAIN][entry.entry_id]["error_tracker"] = error_tracker
 
     # Регистрация сервиса submit_reading
@@ -123,7 +136,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         error_tracker = hass.data[DOMAIN][entry.entry_id].get("error_tracker", {})
         submit_tracker = error_tracker.get(BINARY_SENSOR_SUBMIT_ERROR, {})
         submit_tracker["last_attempt"] = datetime.now().isoformat()
-        coordinator = hass.data[DOMAIN][entry.entry_id].get("coordinator")
+        coordinator = hass.data[DOMAIN][entry.entry_id]["coordinator"]
         try:
             readings_to_send = readings[0] if len(readings) == 1 else readings
             success = await api.submit_readings(meter_id, readings_to_send)
@@ -132,20 +145,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 submit_tracker["last_success"] = datetime.now().isoformat()
                 submit_tracker["last_error_message"] = None
                 # Немедленно обновляем данные после успешной отправки показаний
-                if coordinator:
-                    await coordinator.async_request_refresh()
+                await coordinator.async_request_refresh()
             else:
                 error_msg = "API returned failure (unknown reason)"
                 submit_tracker["error"] = True
                 submit_tracker["last_error_message"] = error_msg
                 raise HomeAssistantError(error_msg)
+        except HomeAssistantError:
+            raise
         except Exception as e:
             error_msg = str(e)
             submit_tracker["error"] = True
             submit_tracker["last_error_message"] = error_msg
-            if coordinator:
-                coordinator.async_update_listeners()
-                raise HomeAssistantError(f"Failed to submit readings: {error_msg}")
+            coordinator.async_update_listeners()
+            raise HomeAssistantError(f"Failed to submit readings: {error_msg}")
 
     hass.services.async_register(DOMAIN, "submit_reading", handle_submit)
 

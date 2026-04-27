@@ -14,15 +14,10 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
     UpdateFailed,
 )
-from homeassistant.helpers import aiohttp_client, device_registry as dr
+from homeassistant.helpers import device_registry as dr
 
 from .const import (
     DOMAIN,
-    CONF_PHONE,
-    CONF_PASSWORD,
-    CONF_UPDATE_INTERVAL,
-    CONF_ACCOUNT_UID,
-    CONF_TOKEN,
     RESOURCE_TYPES,
     UNIT_MAPPING,
     DEVICE_CLASS_MAPPING,
@@ -63,30 +58,10 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Настройка сенсоров и устройств."""
-    phone = entry.data[CONF_PHONE]
-    password = entry.data[CONF_PASSWORD]
-    interval = entry.data.get(CONF_UPDATE_INTERVAL)
-
-    session = aiohttp_client.async_get_clientsession(hass)
-    api = PIKComfortAPI(session, phone, password)
-    api.token = entry.data.get(CONF_TOKEN)
-    api.account_uid = entry.data.get(CONF_ACCOUNT_UID)
-
-    if not api.token or not api.account_uid:
-        if not await api.authenticate():
-            raise UpdateFailed("Authentication failed. Check phone and password.")
-        await api.get_dashboard()
-
-    # Трекер ошибок
-    error_tracker = {
-        BINARY_SENSOR_UPDATE_ERROR: {"error": False, "last_attempt": None, "last_success": None, "last_error_message": None},
-        "submit_error": {"error": False, "last_attempt": None, "last_success": None, "last_error_message": None},
-    }
-
-    coordinator = PIKMetersCoordinator(hass, api, interval, error_tracker, entry)
-    await coordinator.async_config_entry_first_refresh()
-
-    _LOGGER.info("Coordinator data loaded: %d meters", len(coordinator.data) if coordinator.data else 0)
+    # Получаем координатор из hass.data (создан в __init__.py)
+    coordinator = hass.data[DOMAIN][entry.entry_id]["coordinator"]
+    
+    _LOGGER.info("Using shared coordinator for sensors: %d meters", len(coordinator.data) if coordinator.data else 0)
     if coordinator.data:
         for m in coordinator.data:
             _LOGGER.info("Meter: factory_number=%s, _uid=%s, resource_type=%s, tariffs=%s",
@@ -200,14 +175,10 @@ async def async_setup_entry(
             ))
 
     if len(entities) == 0:
-        _LOGGER.warning("No meters found for account %s. Check your PIK account.", api.account_uid)
+        _LOGGER.warning("No meters found. Check your PIK account.")
 
     async_add_entities(entities, True)
 
-    # Сохраняем координатор и API для других компонентов
-    hass.data[DOMAIN][entry.entry_id]["coordinator"] = coordinator
-    hass.data[DOMAIN][entry.entry_id]["api"] = api
-    hass.data[DOMAIN][entry.entry_id]["error_tracker"] = error_tracker
     _LOGGER.info(
         "Created %d sensor entities for %d meters", len(entities), len(coordinator.data) if coordinator.data else 0
     )
