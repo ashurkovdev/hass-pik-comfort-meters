@@ -106,8 +106,8 @@ class PIKComfortAPI:
                     if resp.status in (200, 201):
                         return await resp.json() if text else {}
                     elif resp.status == 401 and retry_auth:
-                        _LOGGER.warning("Token expired, attempting to refresh...")
-                        if await self.authenticate():
+                        _LOGGER.warning("Token expired, attempting to refresh without sending the expired token...")
+                        if await self.authenticate(without_token=True):
                             headers["Authorization"] = f"Token {self.token}"
                             return await self._request(
                                 method, url, headers, json_data, retry_auth=False
@@ -145,13 +145,29 @@ class PIKComfortAPI:
             _LOGGER.exception("Exception during API request: %s %s - %s", method, url, str(e))
             return None
 
-    async def authenticate(self) -> bool:
-        """Получить токен по номеру телефона и паролю."""
+    async def authenticate(self, without_token: bool = False) -> bool:
+        """Получить токен по номеру телефона и паролю.
+        
+        Args:
+            without_token: Если True, не отправлять токен в заголовках (для запроса на получение нового токена)
+        """
         payload = {"username": self.phone, "password": self.password}
         headers = {"Content-Type": "application/json"}
-        data = await self._request_with_retry(
-            "POST", API_AUTH_URL, headers=headers, json_data=payload, retry_auth=False
-        )
+        
+        # Сохраняем текущий токен и временно убираем его
+        saved_token = self.token
+        if without_token:
+            self.token = None
+        
+        try:
+            data = await self._request_with_retry(
+                "POST", API_AUTH_URL, headers=headers, json_data=payload, retry_auth=False
+            )
+        finally:
+            # Восстанавливаем токен если не удалось получить новый
+            if not data or "token" not in data:
+                self.token = saved_token
+        
         if data and "token" in data:
             self.token = data["token"]
             _LOGGER.debug("Authentication successful")

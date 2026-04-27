@@ -93,11 +93,8 @@ class PIKComfortConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return PIKComfortOptionsFlow(config_entry)
 
 
-class PIKComfortOptionsFlow(config_entries.OptionsFlow):
+class PIKComfortOptionsFlow(config_entries.OptionsFlowWithConfigEntry):
     """Options flow для PIK Comfort Meters."""
-
-    def __init__(self, config_entry):
-        self.config_entry = config_entry
 
     async def async_step_init(self, user_input=None) -> FlowResult:
         """Настройка опций."""
