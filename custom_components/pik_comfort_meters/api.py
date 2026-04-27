@@ -17,6 +17,27 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+
+def _safe_log_headers(headers: Optional[Dict]) -> Dict:
+    """Не писать в лог токен авторизации."""
+    if not headers:
+        return {}
+    out = dict(headers)
+    if "Authorization" in out:
+        out["Authorization"] = "Token ***"
+    return out
+
+
+def _safe_log_json_body(data: Optional[Union[Dict, List]]) -> str:
+    """Не писать в лог пароль из тела запроса (логин)."""
+    if data is None:
+        return "None"
+    if isinstance(data, dict) and "password" in data:
+        red = {k: ("***" if k == "password" else v) for k, v in data.items()}
+        return json.dumps(red)
+    return json.dumps(data)
+
+
 # Настройки retry с exponential backoff
 MAX_RETRIES = 3
 INITIAL_RETRY_DELAY = 1  # 1 секунда
@@ -130,8 +151,8 @@ class PIKComfortAPI:
                             "API request failed: %s %s\nHeaders: %s\nRequest body: %s\nResponse status: %d\nResponse body: %s",
                             method,
                             url,
-                            headers,
-                            json.dumps(json_data) if json_data else "None",
+                            _safe_log_headers(headers),
+                            _safe_log_json_body(json_data),
                             resp.status,
                             text,
                         )
@@ -195,22 +216,21 @@ class PIKComfortAPI:
         data = await self._request_with_retry("GET", url)
         if data:
             meters = data.get("meters", [])
-            _LOGGER.info("Fetched %d meters from API", len(meters))
-            # Подробное логирование данных счетчиков для отладки
+            _LOGGER.debug("Fetched %d meters from API", len(meters))
             for i, meter in enumerate(meters):
-                _LOGGER.info(
+                _LOGGER.debug(
                     "Meter[%d]: factory_number=%s, _uid=%s, resource_type=%s, all_keys=%s",
-                    i, meter.get("factory_number"), meter.get("_uid"), 
-                    meter.get("resource_type"), list(meter.keys())
+                    i, meter.get("factory_number"), meter.get("_uid"),
+                    meter.get("resource_type"), list(meter.keys()),
                 )
                 tariffs = meter.get("tariffs", [])
-                _LOGGER.info("  tariffs count=%d", len(tariffs))
+                _LOGGER.debug("  tariffs count=%d", len(tariffs))
                 for j, tariff in enumerate(tariffs):
-                    _LOGGER.info(
+                    _LOGGER.debug(
                         "  tariff[%d]: type=%s, value=%s, user_value=%s, average_in_month=%s, user_value_updated=%s, user_value_created=%s, all_keys=%s",
                         j, tariff.get("type"), tariff.get("value"), tariff.get("user_value"),
                         tariff.get("average_in_month"), tariff.get("user_value_updated"),
-                        tariff.get("user_value_created"), list(tariff.keys())
+                        tariff.get("user_value_created"), list(tariff.keys()),
                     )
             return meters
         return None

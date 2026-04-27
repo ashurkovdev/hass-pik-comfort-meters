@@ -21,25 +21,14 @@ from .const import (
     MAX_UPDATE_INTERVAL,
 )
 from .api import PIKComfortAPI
-from .phone_helper import validate_phone, PHONE_FORMAT
+from .phone_helper import validate_phone
 
 _LOGGER = logging.getLogger(__name__)
 
-
-def _validate_phone(phone: str) -> str:
-    """Валидирует и возвращает цифровой номер телефона."""
-    try:
-        _formatted, digits = validate_phone(phone)
-        return digits
-    except ValueError as err:
-        raise vol.Invalid(f"Неверый формат номера телефона. Ожидается формат: {PHONE_FORMAT}") from err
-
-
-PHONE_INVALIDATOR = vol.All(vol.Strip, _validate_phone)
-
+# Кастомные валидаторы в vol.All ломают voluptuous_serialize (схема для UI) → 500.
 DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_PHONE): PHONE_INVALIDATOR,
+        vol.Required(CONF_PHONE): vol.All(str, vol.Strip),
         vol.Required(CONF_PASSWORD): str,
         vol.Optional(CONF_UPDATE_INTERVAL, default=DEFAULT_UPDATE_INTERVAL): vol.All(
             vol.Coerce(int), vol.Clamp(min=MIN_UPDATE_INTERVAL, max=MAX_UPDATE_INTERVAL)
@@ -63,10 +52,15 @@ class PIKComfortConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="already_configured")
 
         if user_input is not None:
-            phone_digits = user_input[CONF_PHONE]
-            
-            # Форматированный номер только для отображения
-            _formatted, _ = validate_phone(phone_digits)
+            try:
+                _formatted, phone_digits = validate_phone(user_input[CONF_PHONE])
+            except ValueError:
+                return self.async_show_form(
+                    step_id="user",
+                    data_schema=DATA_SCHEMA,
+                    errors={CONF_PHONE: "invalid_phone"},
+                )
+
             password = user_input[CONF_PASSWORD]
             
             session = aiohttp_client.async_get_clientsession(self.hass)
