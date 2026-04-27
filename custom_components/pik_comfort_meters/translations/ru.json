@@ -1,8 +1,9 @@
 {
+    "title": "ПИК Комфорт - подача показаний",
     "config": {
         "step": {
             "user": {
-                "title": "PIK Comfort Meters",
+                "title": "ПИК Комфорт - подача показаний",
                 "description": "Введите данные вашего аккаунта PIK Comfort.",
                 "data": {
                     "phone": "Номер телефона",
@@ -24,7 +25,7 @@
     "options": {
         "step": {
             "init": {
-                "title": "Настройки PIK Comfort Meters",
+                "title": "Настройки ПИК Комфорт - подача показаний",
                 "data": {
                     "update_interval": "Интервал обновления (секунды, 3600-86400)",
                     "password": "Новый пароль (оставьте пустым, чтобы не менять)"
@@ -64,25 +65,76 @@
             "accounted": {
                 "name": "Учтено"
             },
+            "accounted_tariff1": {
+                "name": "Учтено (День)"
+            },
+            "accounted_tariff2": {
+                "name": "Учтено (Ночь)"
+            },
+            "accounted_tariff3": {
+                "name": "Учтено (Утро/Вечер)"
+            },
             "submitted": {
                 "name": "Передано"
+            },
+            "submitted_tariff1": {
+                "name": "Передано (День)"
+            },
+            "submitted_tariff2": {
+                "name": "Передано (Ночь)"
+            },
+            "submitted_tariff3": {
+                "name": "Передано (Утро/Вечер)"
             },
             "consumption": {
                 "name": "Потребление за месяц"
             },
+            "consumption_tariff1": {
+                "name": "Потребление за месяц (День)"
+            },
+            "consumption_tariff2": {
+                "name": "Потребление за месяц (Ночь)"
+            },
+            "consumption_tariff3": {
+                "name": "Потребление за месяц (Утро/Вечер)"
+            },
             "updated": {
                 "name": "Последнее обновление"
             },
+            "updated_tariff1": {
+                "name": "Подача показаний (День)"
+            },
+            "updated_tariff2": {
+                "name": "Подача показаний (Ночь)"
+            },
+            "updated_tariff3": {
+                "name": "Подача показаний (Утро/Вечер)"
+            },
             "created": {
-                "name": "Создано"
+                "name": "Первая подача показаний"
+            },
+            "created_tariff1": {
+                "name": "Первая подача показаний (День)"
+            },
+            "created_tariff2": {
+                "name": "Первая подача показаний (Ночь)"
+            },
+            "created_tariff3": {
+                "name": "Первая подача показаний (Утро/Вечер)"
+            },
+            "update_error": {
+                "name": "Ошибка получения показаний из ПИК"
+            },
+            "submit_error": {
+                "name": "Ошибка подачи показаний в ПИК"
             }
         },
         "binary_sensor": {
             "update_error": {
-                "name": "Ошибка обновления данных"
+                "name": "Ошибка получения показаний из ПИК"
             },
             "submit_error": {
-                "name": "Ошибка отправки показаний"
+                "name": "Ошибка подачи показаний в ПИК"
             }
         }
     }

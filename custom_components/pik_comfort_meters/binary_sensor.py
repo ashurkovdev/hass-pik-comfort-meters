@@ -38,24 +38,18 @@ async def async_setup_entry(
         configuration_url="https://pik-comfort.ru",
     )
 
-    update_name = "Update Error"
-    submit_name = "Submit Error"
     entities = [
         PIKErrorBinarySensor(
             coordinator=coordinator,
             error_tracker=error_tracker,
             error_key=BINARY_SENSOR_UPDATE_ERROR,
-            name=update_name,
             device_info=device_info,
-            device_class=BinarySensorDeviceClass.PROBLEM,
         ),
         PIKErrorBinarySensor(
             coordinator=coordinator,
             error_tracker=error_tracker,
             error_key=BINARY_SENSOR_SUBMIT_ERROR,
-            name=submit_name,
             device_info=device_info,
-            device_class=BinarySensorDeviceClass.PROBLEM,
         ),
     ]
     async_add_entities(entities, True)
@@ -83,25 +77,23 @@ async def _get_monitoring_device(hass: HomeAssistant, entry: ConfigEntry) -> Dev
 class PIKErrorBinarySensor(CoordinatorEntity, BinarySensorEntity):
     """Бинарный сенсор для мониторинга ошибок интеграции."""
 
-    _attr_device_class = BinarySensorDeviceClass.PROBLEM
-    _attr_icon = "mdi:alert-circle-outline"
 
     def __init__(
         self,
         coordinator: CoordinatorEntity,
         error_tracker: dict,
         error_key: str,
-        name: str,
         device_info: DeviceInfo,
-        device_class: BinarySensorDeviceClass,
     ):
         super().__init__(coordinator)
         self._error_key = error_key
-        self._attr_name = f"PIK Comfort {name}"
+        self._attr_has_entity_name = True
+        self._attr_translation_key = error_key
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{error_key}"
         self._error_tracker = error_tracker
         self._attr_device_info = device_info
-        self._attr_device_class = device_class
+        self._attr_device_class = BinarySensorDeviceClass.PROBLEM
+        self._attr_icon = "mdi:alert-circle-outline"
         self._attr_is_on = False
 
     @property

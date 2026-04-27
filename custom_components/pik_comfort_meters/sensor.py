@@ -39,20 +39,6 @@ def _get_tariff_suffix(tariff_count: int, tariff_type: int) -> str:
     return "" if tariff_count == 1 else f"_t{tariff_type}"
 
 
-def _get_display_suffix(tariff_count: int, tariff_type: int) -> str:
-    """Возвращает суффикс для имени в зависимости от количества тарифов."""
-    if tariff_count == 1:
-        return ""
-    if tariff_type == 1:
-        return " (Day)"
-    elif tariff_type == 2:
-        return " (Night)"
-    elif tariff_type == 3:
-        return " (Morning & Evening)"
-    else:
-        return f" Tariff {tariff_type}"
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -118,7 +104,6 @@ async def async_setup_entry(
         for tariff in tariffs:
             tariff_type = tariff.get("type")
             tariff_suffix = _get_tariff_suffix(tariff_count, tariff_type)
-            display_suffix = _get_display_suffix(tariff_count, tariff_type)
 
             # 1. Сенсор учтенных показаний (accounted)
             entities.append(PIKMeterSensor(
@@ -127,7 +112,6 @@ async def async_setup_entry(
                 tariff_type=tariff_type,
                 sensor_type=SENSOR_TYPE_ACCOUNTED,
                 unique_id=f"pik_comfort_meters{factory_number}_accounted{tariff_suffix}",
-                name=f"{device_name}{display_suffix} Accounted",
                 device_info=device_info,
             ))
 
@@ -138,7 +122,6 @@ async def async_setup_entry(
                 tariff_type=tariff_type,
                 sensor_type=SENSOR_TYPE_SUBMITTED,
                 unique_id=f"pik_comfort_meters{factory_number}_submitted{tariff_suffix}",
-                name=f"{device_name}{display_suffix} Submitted",
                 device_info=device_info,
             ))
 
@@ -149,7 +132,6 @@ async def async_setup_entry(
                 tariff_type=tariff_type,
                 sensor_type=SENSOR_TYPE_CONSUMPTION,
                 unique_id=f"pik_comfort_meters{factory_number}_consumption{tariff_suffix}",
-                name=f"{device_name}{display_suffix} Monthly Consumption",
                 device_info=device_info,
             ))
 
@@ -160,7 +142,6 @@ async def async_setup_entry(
                 tariff_type=tariff_type,
                 sensor_type=SENSOR_TYPE_UPDATED,
                 unique_id=f"pik_comfort_meters{factory_number}_updated{tariff_suffix}",
-                name=f"{device_name}{display_suffix} Last Updated",
                 device_info=device_info,
             ))
 
@@ -171,7 +152,6 @@ async def async_setup_entry(
                 tariff_type=tariff_type,
                 sensor_type=SENSOR_TYPE_CREATED,
                 unique_id=f"pik_comfort_meters{factory_number}_created{tariff_suffix}",
-                name=f"{device_name}{display_suffix} Created",
                 device_info=device_info,
             ))
 
@@ -234,7 +214,6 @@ class PIKMeterSensor(CoordinatorEntity, SensorEntity):
         tariff_type: int,
         sensor_type: str,
         unique_id: str,
-        name: str,
         device_info: DeviceInfo,
     ):
         super().__init__(coordinator)
@@ -242,8 +221,15 @@ class PIKMeterSensor(CoordinatorEntity, SensorEntity):
         self._tariff_type = tariff_type
         self._sensor_type = sensor_type
         self._attr_unique_id = unique_id
-        self._attr_name = name
+        self._attr_has_entity_name = True
         self._attr_device_info = device_info
+
+        # Определяем translation key для локализации имени
+        tariff_count = len(meter.get("tariffs", []))
+        if tariff_count > 1:
+            self._attr_translation_key = f"{sensor_type}_tariff{tariff_type}"
+        else:
+            self._attr_translation_key = sensor_type
 
         resource_type = meter.get("resource_type")
         self._attr_native_unit_of_measurement = UNIT_MAPPING.get(resource_type, "kWh")
@@ -313,7 +299,6 @@ class PIKMeterTimestampSensor(CoordinatorEntity, SensorEntity):
         tariff_type: int,
         sensor_type: str,
         unique_id: str,
-        name: str,
         device_info: DeviceInfo,
     ):
         super().__init__(coordinator)
@@ -321,8 +306,15 @@ class PIKMeterTimestampSensor(CoordinatorEntity, SensorEntity):
         self._tariff_type = tariff_type
         self._sensor_type = sensor_type
         self._attr_unique_id = unique_id
-        self._attr_name = name
+        self._attr_has_entity_name = True
         self._attr_device_info = device_info
+
+        # Определяем translation key для локализации имени
+        tariff_count = len(meter.get("tariffs", []))
+        if tariff_count > 1:
+            self._attr_translation_key = f"{sensor_type}_tariff{tariff_type}"
+        else:
+            self._attr_translation_key = sensor_type
 
         # Для timestamp сенсоров используем device_class timestamp
         self._attr_device_class = SensorDeviceClass.TIMESTAMP

@@ -1,4 +1,5 @@
 {
+    "title": "PIK Comfort Meters",
     "config": {
         "step": {
             "user": {
@@ -64,25 +65,76 @@
             "accounted": {
                 "name": "Accounted"
             },
+            "accounted_tariff1": {
+                "name": "Accounted (Day)"
+            },
+            "accounted_tariff2": {
+                "name": "Accounted (Night)"
+            },
+            "accounted_tariff3": {
+                "name": "Accounted (Morning & Evening)"
+            },
             "submitted": {
                 "name": "Submitted"
+            },
+            "submitted_tariff1": {
+                "name": "Submitted (Day)"
+            },
+            "submitted_tariff2": {
+                "name": "Submitted (Night)"
+            },
+            "submitted_tariff3": {
+                "name": "Submitted (Morning & Evening)"
             },
             "consumption": {
                 "name": "Monthly Consumption"
             },
+            "consumption_tariff1": {
+                "name": "Monthly Consumption (Day)"
+            },
+            "consumption_tariff2": {
+                "name": "Monthly Consumption (Night)"
+            },
+            "consumption_tariff3": {
+                "name": "Monthly Consumption (Morning & Evening)"
+            },
             "updated": {
                 "name": "Last Updated"
             },
+            "updated_tariff1": {
+                "name": "Reading Submission (Day)"
+            },
+            "updated_tariff2": {
+                "name": "Reading Submission (Night)"
+            },
+            "updated_tariff3": {
+                "name": "Reading Submission (Morning & Evening)"
+            },
             "created": {
-                "name": "Created"
+                "name": "First Reading Submission"
+            },
+            "created_tariff1": {
+                "name": "First Reading Submission (Day)"
+            },
+            "created_tariff2": {
+                "name": "First Reading Submission (Night)"
+            },
+            "created_tariff3": {
+                "name": "First Reading Submission (Morning & Evening)"
+            },
+            "update_error": {
+                "name": "Error receiving readings from PIK"
+            },
+            "submit_error": {
+                "name": "Error submitting readings to PIK"
             }
         },
         "binary_sensor": {
             "update_error": {
-                "name": "Update Error"
+                "name": "Error receiving readings from PIK"
             },
             "submit_error": {
-                "name": "Submit Error"
+                "name": "Error submitting readings to PIK"
             }
         }
     }
