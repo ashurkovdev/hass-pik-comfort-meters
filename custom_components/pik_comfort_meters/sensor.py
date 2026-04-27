@@ -1,7 +1,7 @@
 """Сенсоры для показаний счетчиков ПИК Комфорт."""
 
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from typing import Dict, Any, List, Optional
 
 from homeassistant.components.sensor import SensorEntity, SensorDeviceClass
@@ -245,12 +245,12 @@ class PIKMeterSensor(CoordinatorEntity, SensorEntity):
         self._attr_device_info = device_info
 
         resource_type = meter.get("resource_type")
-        self._attr_unit_of_measurement = UNIT_MAPPING.get(resource_type, "kWh")
+        self._attr_native_unit_of_measurement = UNIT_MAPPING.get(resource_type, "kWh")
         self._attr_device_class = DEVICE_CLASS_MAPPING.get(resource_type)
         
         _LOGGER.debug(
             "Sensor %s: resource_type=%s, unit=%s, device_class=%s",
-            self._attr_unique_id, resource_type, self._attr_unit_of_measurement, self._attr_device_class
+            self._attr_unique_id, resource_type, self._attr_native_unit_of_measurement, self._attr_device_class
         )
 
         self._state: Optional[float] = None
@@ -354,9 +354,9 @@ class PIKMeterTimestampSensor(CoordinatorEntity, SensorEntity):
                             if user_updated:
                                 try:
                                     parsed_dt = datetime.fromisoformat(user_updated.replace('Z', '+00:00'))
-                                    # Добавляем UTC timezone, если его нет
+                                    # Добавляем timezone Home Assistant, если его нет
                                     if parsed_dt.tzinfo is None:
-                                        parsed_dt = parsed_dt.replace(tzinfo=timezone.utc)
+                                        parsed_dt = parsed_dt.replace(tzinfo=self.hass.config.time_zone)
                                     self._state = parsed_dt
                                 except (ValueError, AttributeError):
                                     self._state = None
@@ -366,9 +366,9 @@ class PIKMeterTimestampSensor(CoordinatorEntity, SensorEntity):
                             if user_created:
                                 try:
                                     parsed_dt = datetime.fromisoformat(user_created.replace('Z', '+00:00'))
-                                    # Добавляем UTC timezone, если его нет
+                                    # Добавляем timezone Home Assistant, если его нет
                                     if parsed_dt.tzinfo is None:
-                                        parsed_dt = parsed_dt.replace(tzinfo=timezone.utc)
+                                        parsed_dt = parsed_dt.replace(tzinfo=self.hass.config.time_zone)
                                     self._state = parsed_dt
                                 except (ValueError, AttributeError):
                                     self._state = None
