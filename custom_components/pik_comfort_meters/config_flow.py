@@ -21,12 +21,25 @@ from .const import (
     MAX_UPDATE_INTERVAL,
 )
 from .api import PIKComfortAPI
+from .phone_helper import validate_phone, PHONE_FORMAT
 
 _LOGGER = logging.getLogger(__name__)
 
+
+def _validate_phone(phone: str) -> str:
+    """Валидирует и возвращает цифровой номер телефона."""
+    try:
+        _formatted, digits = validate_phone(phone)
+        return digits
+    except ValueError as err:
+        raise vol.Invalid(f"Неверый формат номера телефона. Ожидается формат: {PHONE_FORMAT}") from err
+
+
+PHONE_INVALIDATOR = vol.All(vol.Strip, _validate_phone)
+
 DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_PHONE): str,
+        vol.Required(CONF_PHONE): PHONE_INVALIDATOR,
         vol.Required(CONF_PASSWORD): str,
         vol.Optional(CONF_UPDATE_INTERVAL, default=DEFAULT_UPDATE_INTERVAL): vol.All(
             vol.Coerce(int), vol.Clamp(min=MIN_UPDATE_INTERVAL, max=MAX_UPDATE_INTERVAL)
@@ -50,11 +63,14 @@ class PIKComfortConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="already_configured")
 
         if user_input is not None:
-            phone = user_input[CONF_PHONE]
+            phone_digits = user_input[CONF_PHONE]
+            
+            # Форматированный номер только для отображения
+            _formatted, _ = validate_phone(phone_digits)
             password = user_input[CONF_PASSWORD]
             
             session = aiohttp_client.async_get_clientsession(self.hass)
-            api = PIKComfortAPI(session, phone, password)
+            api = PIKComfortAPI(session, phone_digits, password)
             
             try:
                 authenticated = await api.authenticate()
@@ -65,9 +81,9 @@ class PIKComfortConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 
                 if api.account_uid:
                     return self.async_create_entry(
-                        title=f"PIK Comfort ({phone})",
+                        title=f"PIK Comfort ({_formatted})",
                         data={
-                            CONF_PHONE: phone,
+                            CONF_PHONE: phone_digits,
                             CONF_PASSWORD: password,
                             CONF_UPDATE_INTERVAL: user_input[CONF_UPDATE_INTERVAL],
                             CONF_ACCOUNT_UID: api.account_uid,
@@ -135,7 +151,7 @@ class PIKComfortOptionsFlow(config_entries.OptionsFlowWithConfigEntry):
             # Возвращаем полностью обновлённую запись
             return self.async_create_entry(title="", data=new_data)
 
-        # Схема для отображения формы (без изменений)
+        # Схема для отображения формы
         schema = vol.Schema(
             {
                 vol.Optional(

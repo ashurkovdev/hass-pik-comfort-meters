@@ -14,7 +14,8 @@
         "error": {
             "auth_failed": "Authentication failed. Check phone and password.",
             "no_accounts": "No meters found for this account.",
-            "unknown": "An unexpected error occurred."
+            "unknown": "An unexpected error occurred.",
+            "invalid_phone": "Invalid phone number format. Expected format: +7(000)000-00-00"
         },
         "abort": {
             "already_configured": "Account is already configured."
@@ -33,7 +34,8 @@
         "error": {
             "auth_failed": "Authentication failed. Check phone and password.",
             "no_accounts": "No meters found for this account.",
-            "unknown": "An unexpected error occurred."
+            "unknown": "An unexpected error occurred.",
+            "invalid_phone": "Invalid phone number format. Expected format: +7(000)000-00-00"
         },
         "abort": {
             "auth_failed": "Authentication failed. Check phone and password.",
