@@ -1,7 +1,7 @@
 """Сенсоры для показаний счетчиков ПИК Комфорт."""
 
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, Any, List, Optional
 
 from homeassistant.components.sensor import SensorEntity, SensorDeviceClass
@@ -353,7 +353,11 @@ class PIKMeterTimestampSensor(CoordinatorEntity, SensorEntity):
                         if self._sensor_type == SENSOR_TYPE_UPDATED:
                             if user_updated:
                                 try:
-                                    self._state = datetime.fromisoformat(user_updated.replace('Z', '+00:00'))
+                                    parsed_dt = datetime.fromisoformat(user_updated.replace('Z', '+00:00'))
+                                    # Добавляем UTC timezone, если его нет
+                                    if parsed_dt.tzinfo is None:
+                                        parsed_dt = parsed_dt.replace(tzinfo=timezone.utc)
+                                    self._state = parsed_dt
                                 except (ValueError, AttributeError):
                                     self._state = None
                             else:
@@ -361,7 +365,11 @@ class PIKMeterTimestampSensor(CoordinatorEntity, SensorEntity):
                         elif self._sensor_type == SENSOR_TYPE_CREATED:
                             if user_created:
                                 try:
-                                    self._state = datetime.fromisoformat(user_created.replace('Z', '+00:00'))
+                                    parsed_dt = datetime.fromisoformat(user_created.replace('Z', '+00:00'))
+                                    # Добавляем UTC timezone, если его нет
+                                    if parsed_dt.tzinfo is None:
+                                        parsed_dt = parsed_dt.replace(tzinfo=timezone.utc)
+                                    self._state = parsed_dt
                                 except (ValueError, AttributeError):
                                     self._state = None
                             else:
