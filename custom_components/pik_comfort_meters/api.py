@@ -252,28 +252,21 @@ class PIKComfortAPI:
             _LOGGER.error("No account_uid, cannot submit readings")
             return False
 
-        account_id = self.account_uid
         if isinstance(readings, (float, int)):
             payload = [
-                {
-                    "account_id": account_id,
-                    "meter": meter_id,
-                    "tariff_type": 1,
-                    "value": float(readings),
-                }
+                {"meter": meter_id, "tariff_type": 1, "value": float(readings)}
             ]
         else:
             payload = [
-                {
-                    "account_id": account_id,
-                    "meter": meter_id,
-                    "tariff_type": idx + 1,
-                    "value": float(v),
-                }
+                {"meter": meter_id, "tariff_type": idx + 1, "value": float(v)}
                 for idx, v in enumerate(readings)
             ]
 
-        headers = {"Content-Type": "application/json"}
+        headers = {
+            "Content-Type": "application/json",
+            "X-Account-Uid": self.account_uid,
+            "X-Source": "homeassistant",
+        }
         data = await self._request_with_retry(
             "POST", API_SUBMIT_URL, headers=headers, json_data=payload
         )
