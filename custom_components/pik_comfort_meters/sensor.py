@@ -9,6 +9,7 @@ from homeassistant.components.sensor import SensorEntity, SensorDeviceClass
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -318,6 +319,7 @@ class PIKMeterTimestampSensor(CoordinatorEntity, SensorEntity):
 
         # Для timestamp сенсоров используем device_class timestamp
         self._attr_device_class = SensorDeviceClass.TIMESTAMP
+        self._attr_entity_category = EntityCategory.DIAGNOSTIC
 
         self._state: Optional[datetime] = None
 
