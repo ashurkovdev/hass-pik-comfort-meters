@@ -94,7 +94,6 @@ class PIKErrorBinarySensor(CoordinatorEntity, BinarySensorEntity):
         self._attr_device_info = device_info
         self._attr_device_class = BinarySensorDeviceClass.PROBLEM
         self._attr_icon = "mdi:alert-circle-outline"
-        self._attr_is_on = False
 
     @property
     def is_on(self) -> bool:
@@ -116,8 +115,8 @@ class PIKErrorBinarySensor(CoordinatorEntity, BinarySensorEntity):
 
     @property
     def available(self) -> bool:
-        """Возвращает True если последняя попытка была успешной."""
-        return self._error_tracker.get(self._error_key, {}).get("last_success") is not None
+        """Мониторинговый сенсор всегда доступен для отображения состояния ошибки."""
+        return True
 
     @callback
     def _handle_coordinator_update(self) -> None:

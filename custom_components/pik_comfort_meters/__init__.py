@@ -157,8 +157,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             error_msg = str(e)
             submit_tracker["error"] = True
             submit_tracker["last_error_message"] = error_msg
+            raise HomeAssistantError(f"Failed to submit readings: {error_msg}") from e
+        finally:
             coordinator.async_update_listeners()
-            raise HomeAssistantError(f"Failed to submit readings: {error_msg}")
 
     hass.services.async_register(DOMAIN, "submit_reading", handle_submit)
 

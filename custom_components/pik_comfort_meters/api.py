@@ -248,14 +248,28 @@ class PIKComfortAPI:
         if not self.token:
             _LOGGER.error("No token, cannot submit readings")
             return False
+        if not self.account_uid:
+            _LOGGER.error("No account_uid, cannot submit readings")
+            return False
 
+        account_id = self.account_uid
         if isinstance(readings, (float, int)):
             payload = [
-                {"meter": meter_id, "tariff_type": 1, "value": float(readings)}
+                {
+                    "account_id": account_id,
+                    "meter": meter_id,
+                    "tariff_type": 1,
+                    "value": float(readings),
+                }
             ]
         else:
             payload = [
-                {"meter": meter_id, "tariff_type": idx + 1, "value": float(v)}
+                {
+                    "account_id": account_id,
+                    "meter": meter_id,
+                    "tariff_type": idx + 1,
+                    "value": float(v),
+                }
                 for idx, v in enumerate(readings)
             ]
 

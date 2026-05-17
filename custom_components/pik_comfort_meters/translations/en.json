@@ -131,10 +131,10 @@
         },
         "binary_sensor": {
             "update_error": {
-                "name": "Error receiving readings from PIK"
+                "name": "Receiving readings from PIK"
             },
             "submit_error": {
-                "name": "Error submitting readings to PIK"
+                "name": "Submitting readings to PIK"
             }
         }
     }
