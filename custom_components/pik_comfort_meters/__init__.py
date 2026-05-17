@@ -17,6 +17,16 @@ from .sensor import PIKMetersCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
+def _validate_submit_readings(readings: List[float]) -> None:
+    """Проверить показания перед отправкой в API."""
+    for idx, value in enumerate(readings):
+        if value <= 0:
+            tariff_hint = f" for tariff {idx + 1}" if len(readings) > 1 else ""
+            raise HomeAssistantError(
+                f"Reading{tariff_hint} must be greater than zero (got {value})"
+            )
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Настройка интеграции."""
     hass.data.setdefault(DOMAIN, {})
@@ -122,6 +132,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
             if not readings:
                 raise HomeAssistantError(f"No valid readings for device {device_id}")
+
+        _validate_submit_readings(readings)
 
         # Получаем meter_id из сохранённых метаданных устройства
         # device.identifiers is a set of tuples like {(domain, unique_id)}
